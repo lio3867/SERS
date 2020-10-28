@@ -46,19 +46,96 @@ class SERS():
         ## Set INPUT
         self.my_ESS_input = np.array([1,])
         self.my_pressure_input = { 'Pa_in':250,'Pb_in':260,'Pc_in':220,'Pd_in':150,'Pe_in':115 }
-        self.t_integration_s = 15 #s
-        self.t_step_min = 3 #min
+        self.t_integration_s = 15   #s
+        self.t_step_min = 3         #min
         self.delta_P = 25
-        self.replicates = 1  # 2 for 1 replicate; #3 for 2 replicates
+        self.replicates = 1         # 2 for 1 replicate; #3 for 2 replicates
         # delay_time = 30 #s
         self.step_index = 0
         self.plus_minus = 1
         ##
         self.n_from_inputs()           # Calculate n from inputs
-        [setattr(self.args, k, v) for k,v in my_pressure_input.items()]
+        [setattr(self, k, v) for k,v in my_pressure_input.items()]
         self.print_params()
 
         # k = delay_time/t_integration_s
+
+        self.set_ESS()
+        self.set_FRP()
+        self.init_spectro()
+        self.create_dataframe()
+        self.begin_exp()
+
+    def set_ESS(self):
+        '''
+        Set up ESS
+        '''
+        ESS_serial_numbers = Switchboard.detect()
+        self.switchboard = Switchboard(ESS_serial_numbers[0])
+
+    def set_FRP(self):
+        '''
+        Set up FRP
+        '''
+        FRP_serial_numbers = Flowboard.detect()
+        self.flowboard = Flowboard(FRP_serial_numbers[0])
+        self.flowboard.set_calibration(1, "Water")
+        self.flowboard.set_calibration(2, "Water")
+        available_FRP_ports = self.flowboard.get_available_ports()
+
+    def init_spectro(self):
+        '''
+        Initialize Spectrometer
+        '''
+        usb.core.find()
+        devices = sb.list_devices()
+        self.spec = sb.Spectrometer(devices[0])
+        self.spec.integration_time_micros(self.t_integration)
+        self.wl = self.spec.wavelengths()
+        # wl_index = np.arange(len(wl))
+
+    def prepare_df_info(self):
+        '''
+        '''
+        t = np.array(['t(s)'])
+        switch = np.array(['SW_I', 'SW_II'])
+        SW_step = np.array(['SW_step'])
+        step = np.array(['step'])
+        pressure = np.array(['Pa', 'Pb', 'Pc', 'Pd','Pe',
+                             'Pa_m', 'Pb_m', 'Pc_m', 'Pd_m', 'Pe_m'])
+        FRP = np.array(['Q1', 'Q2'])
+
+        dftime = pd.DataFrame(columns = t)
+        dfSW_step = pd.DataFrame(columns = SW_step)
+        dfSwitch = pd.DataFrame(columns = switch)
+        dfStep = pd.DataFrame(columns = step)
+        dfPressure = pd.DataFrame(columns = pressure)
+        dfFRP = pd.DataFrame(columns = FRP)
+
+        self.df_info = pd.concat([dftime,dfSW_step,dfSwitch,dfStep,dfPressure,dfFRP], axis=1, sort=False)
+
+    def create_dataframe(self):
+        '''
+        Create a Dataframe
+        '''
+
+        self.prepare_df_info()
+        self.dfIntensity = pd.DataFrame(columns = self.wl)
+
+        my_file = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
+        today = datetime.datetime.today().strftime('%Y%m%d-%H%M')
+        my_file.to_csv('Data\d_{}.csv'.format(today), index=True, sep=';')
+
+    def begin_exp(self):
+        '''
+        '''
+        time_start_tuple = time.localtime() # get struct_time
+        time_start = time.strftime("%H:%M:%S", time_start_tuple)
+        print('Start experiment at ', time_start)
+        self.switchboard.set_position("A", self.my_ESS_input[0])
+        self.switchboard.set_position("B", self.my_ESS_input[0])
+        print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
+        print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
 
     def n_from_inputs(self):
         '''
@@ -91,20 +168,23 @@ class SERS():
 
     def stablize_to_balance_state(self,t=10):
         '''
+        P_in values
         '''
         print('stablizing ...')
-        fgt_set_pressure(0, self.Pa_in)
-        fgt_set_pressure(1, self.Pb_in)
-        fgt_set_pressure(4, self.Pc_in)
-        fgt_set_pressure(5, self.Pd_in)
-        fgt_set_pressure(6, self.Pe_in)
+        lval = [0, 1, 4, 5, 6]
+        [ fgt_set_pressure(lval[j], getattr(self, k)) for j,k,v in enumerate(self.my_pressure_input.items()) ]
+        # fgt_set_pressure(0, self.Pa_in)
+        # fgt_set_pressure(1, self.Pb_in)
+        # fgt_set_pressure(4, self.Pc_in)
+        # fgt_set_pressure(5, self.Pd_in)
+        # fgt_set_pressure(6, self.Pe_in)
         time.sleep(t) #sec
 
     def close(self):
         '''
         '''
         print('closing (take about 1 min)')
-        spec.close()
+        self.spec.close()
         fgt_set_pressure(4, 0)
         fgt_set_pressure(6, 0)
         for i in np.range(60):
@@ -118,24 +198,24 @@ class SERS():
     def fill_infos(self):
         '''
         '''
-        Q1 = flowboard.get_flowrate(available_FRP_ports[0])
-        Q2 = flowboard.get_flowrate(available_FRP_ports[1])
-        if Q1 > 2 and Q2 > 2 and Q1 < 54 and Q2 < 54:
+        self.Q1 = self.flowboard.get_flowrate(available_FRP_ports[0])
+        self.Q2 = self.flowboard.get_flowrate(available_FRP_ports[1])
+        if self.Q1 > 2 and self.Q2 > 2 and self.Q1 < 54 and self.Q2 < 54:
             [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_Pout) ]
             time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
-            intensities = spec.intensities()
-            dfIntensity.loc[len(dfIntensity)] = intensities
-            df_info.loc[len(df_info)] = [time_string, sw_step, port_I, port_II, step_index,
+            intensities = self.spec.intensities()
+            self.dfIntensity.loc[len(self.dfIntensity)] = intensities
+            self.df_info.loc[len(self.df_info)] = [time_string, sw_step, port_I, port_II, step_index,
                                     self.Pa_temp, self.Pb_temp, self.Pc_in, self.Pd_in, self.Pe_in,
                                     round(self.Pa_out,2),round(self.Pb_out,2),
                                     round(self.Pc_out,2),round(self.Pd_out,2), round(self.Pe_out,2),
-                                    round(Q1,2),round(Q2,2)]
-            df_raw_data = pd.concat([df_info,dfIntensity], axis=1, sort=False)
+                                    round(self.Q1,2),round(self.Q2,2)]
+            df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
         else:
-            plus_minus *= -1
-            count +=  1
-            print('n= ', count)
-            print('plus_minus= ', plus_minus)
+            self.plus_minus *= -1
+            self.count +=  1
+            print( f'n = {self.count}' )
+            print( f'plus_minus = {self.plus_minus} ' )
             break
 
     def one_step(self):
@@ -146,9 +226,9 @@ class SERS():
         fgt_set_pressure(0, self.Pa_temp)
         fgt_set_pressure(1, self.Pb_temp)
         time.sleep(6)
-        print(f'Applying P01245 =  {Pa_temp},{Pb_temp},{self.Pc_in},{self.Pd_in},{self.Pe_in} ')
-        df_info =  pd.DataFrame(columns=df_info.columns)
-        dfIntensity = pd.DataFrame(columns=dfIntensity.columns)
+        print(f'Applying P01245 =  {self.Pa_temp},{self.Pb_temp},{self.Pc_in},{self.Pd_in},{self.Pe_in} ')
+        self.df_info =  pd.DataFrame(columns=self.df_info.columns)
+        self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
         step_index +=  1
         self.list_Pout = ['Pa_out', 'Pb_out', 'Pc_out', 'Pd_out', 'Pe_out']
         for i in range(int(self.n)):
@@ -156,17 +236,18 @@ class SERS():
         df_raw_data.to_csv('Data\d_{}.csv'.format(today), mode='a', header=False, index=True, sep=';')
         df_raw_data = pd.DataFrame(columns=df_raw_data.columns)
 
-
     def sweep_pressures(self):
-        global plus_minus,step_index,df_info,dfIntensity
-        count = -1 # first haft of the period
-        Pa_temp = Pa_in - delta_P
-        Pb_temp = Pb_in + delta_P
+        '''
+        '''
+        #global plus_minus,step_index,df_info,dfIntensity
+        self.count = -1 # first haft of the period
+        self.Pa_temp = Pa_in - delta_P
+        self.Pb_temp = Pb_in + delta_P
         for item in np.arange(50):
-            Q1 = flowboard.get_flowrate(available_FRP_ports[0])
-            Q2 = flowboard.get_flowrate(available_FRP_ports[1])
-            # if Q1 > 1 and Q2 > 1 and Q1 < 54 and Q2 < 54 and count < replicates:
-            if count < self.replicates:
+            self.Q1 = self.flowboard.get_flowrate(available_FRP_ports[0])
+            self.Q2 = self.flowboard.get_flowrate(available_FRP_ports[1])
+            # if self.Q1 > 1 and self.Q2 > 1 and self.Q1 < 54 and self.Q2 < 54 and count < replicates:
+            if self.count < self.replicates:
                 self.one_step()
             else:
                 break
@@ -191,10 +272,10 @@ class SERS():
             #         print('air starting in flow unit')
             #         break
             # t0 = time.time()
-            switchboard.set_position("A", port_I)
-            switchboard.set_position("B", port_II)
-            print("Switch on port A is at position {}".format(switchboard.get_position('A')))
-            print("Switch on port B is at position {}".format(switchboard.get_position('B')))
+            self.switchboard.set_position("A", port_I)
+            self.switchboard.set_position("B", port_II)
+            print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
+            print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
 
             # for i in np.arange(300):
             #     flow_list = []
@@ -206,7 +287,7 @@ class SERS():
             # print('Stop pumping air')
             # stablize_to_balance_state(t=15)
             # t1 = time.time()
-            sweep_pressures()
+            self.sweep_pressures()
             # stablize_to_balance_state(t=1)
             # print('Recording spectra during delay time')
             # df_info_delay =  pd.DataFrame(columns=df_info.columns)
@@ -235,59 +316,15 @@ class SERS():
             # df_delay.to_csv('Data\d_{}.csv'.format(today), mode='a', header=False, index=True, sep=';')
             # df_delay = pd.DataFrame(columns=df_delay.columns)
 
-        close()
-
-
-## Set up ESS
-ESS_serial_numbers = Switchboard.detect()
-switchboard = Switchboard(ESS_serial_numbers[0])
-
-## Set up FRP
-FRP_serial_numbers = Flowboard.detect()
-flowboard = Flowboard(FRP_serial_numbers[0])
-flowboard.set_calibration(1, "Water")
-flowboard.set_calibration(2, "Water")
-available_FRP_ports = flowboard.get_available_ports()
-
-## Initialize Spectrometer
-usb.core.find()
-devices = sb.list_devices()
-spec = sb.Spectrometer(devices[0])
-spec.integration_time_micros(t_integration)
-wl = spec.wavelengths()
-# wl_index = np.arange(len(wl))
-
-## Create a Dataframe
-t = np.array(['t(s)'])
-switch = np.array(['SW_I', 'SW_II'])
-SW_step = np.array(['SW_step'])
-step = np.array(['step'])
-pressure = np.array(['Pa', 'Pb', 'Pc', 'Pd','Pe',
-                     'Pa_m', 'Pb_m', 'Pc_m', 'Pd_m', 'Pe_m'])
-FRP = np.array(['Q1', 'Q2'])
-
-dftime = pd.DataFrame(columns = t)
-dfSW_step = pd.DataFrame(columns = SW_step)
-dfSwitch = pd.DataFrame(columns = switch)
-dfStep = pd.DataFrame(columns = step)
-dfPressure = pd.DataFrame(columns = pressure)
-dfFRP = pd.DataFrame(columns = FRP)
-dfIntensity = pd.DataFrame(columns = wl)
-df_info = pd.concat([dftime,dfSW_step,dfSwitch,dfStep,dfPressure,dfFRP], axis=1, sort=False)
-
-my_file = pd.concat([df_info,dfIntensity], axis=1, sort=False)
-today = datetime.datetime.today().strftime('%Y%m%d-%H%M')
-my_file.to_csv('Data\d_{}.csv'.format(today), index=True, sep=';')
-
-time_start_tuple = time.localtime() # get struct_time
-time_start = time.strftime("%H:%M:%S", time_start_tuple)
-print('Start experiment at ', time_start)
-switchboard.set_position("A", my_ESS_input[0])
-switchboard.set_position("B", my_ESS_input[0])
-print("Switch on port A is at position {}".format(switchboard.get_position('A')))
-print("Switch on port B is at position {}".format(switchboard.get_position('B')))
-
+        self.close()
 
 sr = SERS()
+
+
+
+
+
+
+
 sr.stablize_to_balance_state(t=60)
 sr.go_through_my_ESS_input()

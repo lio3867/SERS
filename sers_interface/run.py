@@ -9,7 +9,7 @@ pip install flask-socketio
 pip install eventlet
 pip install eventlet==0.26 (for Windows)
 
-python -m image_analysis.run
+python -m sers_interface.run
 
 """
 from __future__ import print_function, division, absolute_import
@@ -33,8 +33,8 @@ import numpy as np
 ##
 from flask import Flask, render_template, request, redirect    # Flask imports
 from flask_socketio import SocketIO, emit
-from image_analysis.modules.pages.define_all_pages import *
-from image_analysis.modules.util_interf import *
+from sers_interface.modules.pages.define_all_pages import *
+from sers_interface.modules.util_interf import *
 from modules_unet.util_misc import *
 
 platf  = find_platform()
@@ -50,13 +50,13 @@ else:
 Debug = True            # Debug Flask
 
 app = Flask(__name__)
-app.config['UPLOADED_PATH'] = opj(os.getcwd(),'image_analysis','upload')              # upload directory from the Dropzone
+app.config['UPLOADED_PATH'] = opj(os.getcwd(),'sers_interface','upload')              # upload directory from the Dropzone
 print("######### app.config['UPLOADED_PATH'] is {0} !!!".format(app.config['UPLOADED_PATH']))
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
-from detect_cells import FIND_CELLS
+from MD093_1-1_modif import SERS
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -198,22 +198,6 @@ def infos_hard_soft():
     except:
         print('working out of context')
 
-@app.route('/', methods=['GET', 'POST'])
-def upload_file(debug=1):
-    '''
-    Upload the datasets from the Dropzone
-    with the same tree structure and make the processing list.
-    '''
-    dup = define_upload_page()
-    if request.method == 'POST':
-        for f in request.files.getlist('file'):                   # retrieves files names
-            file_in_folder_path = request.form.get('fullPath')
-            if debug>0: print("file_in_folder_path are ", file_in_folder_path)
-            full_path = os.path.join(app.config['UPLOADED_PATH'], file_in_folder_path)
-            save_file(f, full_path)
-
-    return render_template('index_folder.html', **dup.__dict__)
-
 def full_addr(list_files):
     '''
 
@@ -285,32 +269,6 @@ def erase_processed(debug=0):
 
     return render_template('processed.html', **define_processed().__dict__) #
 
-@app.route('/reload', methods = ['GET', 'POST'])
-def reload(debug=0):
-    '''
-    Reload an old dataset
-    Erase processings and controls folders and replace by the ones of the old processing
-    '''
-    selected_check = json.loads(request.form.get('reload_data'))[0].strip()
-    print(selected_check)
-    path_proc = opj(os.getcwd(), 'static', 'processings')           # path to the processings
-    path_ctrl = opj(os.getcwd(), 'static', 'controls')              # path to the controls
-    path_list_proc = opj(os.getcwd(), 'static', 'list_proc.json')
-
-    # Erase old
-
-    sh.rmtree(path_proc)                                                 # Delete Processings
-    sh.rmtree(path_ctrl)                                                 # Delete Controls
-    pathf = opj(os.getcwd(), 'static', 'previous_proc', selected_check)  # Path to previous processings
-
-    # Copy reload
-
-    sh.copytree(opj(pathf, 'processings'), path_proc)           # Put back the Processings
-    sh.copytree(opj(pathf, 'controls'), path_ctrl)              # Put back the Controls
-    sh.copy(opj(pathf, 'list_proc.json'), path_list_proc)       # Put back the list_proc.json
-    define_visu_results()
-
-    return render_template('visu_results.html', **define_visu_results().__dict__) #
 
 def prepare_folder_download(debug=0):
     '''
@@ -420,7 +378,7 @@ def message_at_beginning(host,port):
 if __name__ == '__main__':
     init(app.config)                         # clean last processings and upload folders
 
-    port = 5000; host = '0.0.0.0' if platf == 'win' else '0.0.0.0'
+    port = 5044; host = '0.0.0.0' if platf == 'win' else '0.0.0.0'
     # port = 5000 8080
     print("host is " , host)
     launch_browser(port, host, platf)
