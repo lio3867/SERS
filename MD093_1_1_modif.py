@@ -308,8 +308,3 @@ class SERS():
             # df_delay = pd.DataFrame(columns=df_delay.columns)
 
         self.close()
-
-sr = SERS()
-
-# sr.stablize_to_balance_state(t=60)
-# sr.go_through_my_ESS_input()

@@ -20,28 +20,20 @@
 
 {% include 'proc_result.html' %}
 
-{% include 'params_op_temp.html' %}
+{% include 'params_experim.html' %}
 
 {% include 'proc.html' %}
 
 {% include 'settings.html' %}
 
-{% include 'hard_soft_infos.html' %}
-
-{% include 'proc_opts.html' %}
 
 <script>
-
-curr_op = 'nbcells';
 
 $(document).ready(function(){
     var socket = io.connect('http://' + document.domain + ':' + location.port );  //+ '/test'
 
     // socket.on('response', function(msg){alert(msg.data)})
 
-    //-------- Params for operations
-
-    {% include 'params_op.html' %}
 
     //------- Launch the processing
 
@@ -72,9 +64,6 @@ $(document).ready(function(){
 
     {% include 'settings_actions.html' %}
 
-    {% include 'hard_soft_infos_refresh.html' %}
-
-    {% include 'proc_opts_actions.html' %}
 
 });
 

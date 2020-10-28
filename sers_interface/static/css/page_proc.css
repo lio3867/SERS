@@ -30,81 +30,11 @@
     top: 50%;
 }
 
-/*
-###### Panel (blue) with all names of the file to be processed
-*/
-
-div.folders{
-
-    /* box-shadow: 0.5em 0.5em 0.7em; */
-    /*max-width: 800px;*/
-    width: 500px;
-    height: 400px;
-    background-color: #fffff;/*#f0f5f5 ; #99ccff*/
-    font-size:85%;
-    font-color:#fff;
-    /* overflow-y: scroll; */
-    z-index: 20;
-    }
-
-.dropzone {
-   /*width: 10%; Changing size of the dropzone*/
-   margin-top: 5%;
-   height: 100px; /*Changing size of the dropzone*/
-   min-height: 0px !important;
-}
-
-.dz-message {
-    position: relative;
-    top: -20%;
-}
 
 #processing {
     position: absolute;
     bottom: 20%;
     left: 80%;
-
-}
-
- /* div.params { */
-    /*position: fixed;*/
-    /*position: relative;*/
-    /* padding-left: 30px;
-    padding-right: 20px;
-    padding-bottom: 20px;
-    padding-top: 20px;
-    box-shadow: 0.5em 0.5em 0.7em;
-    top: -0px;
-    left: 45%;
-    margin-left: -230px;
-    margin-top: -300px;
-    height: 300px;
-    width: 250px;
-    background-color: #ddffcc;
-    font-size:85%; */
-    /* } */
-
-#list_files {
-   /* icon for parameters*/
-    position: absolute;
-    top: 10%;
-    left:10%;
-  }
-
-.listfiles {
-
-    position: absolute;
-    top: 300px;
-    left:33%;
-    font-size:15px;
-    width:500px;
-
-    }
-
-.dz-details {
-
-    height: 50px;
-    width: 50px;
 
 }
 
@@ -219,30 +149,18 @@ div.folders{
       left:50px;
     }
 
-/* Operation selection */
-
-#selectop {
-
+#params_general {
       position: absolute;
       top: 200px;
-      right:30%;
-
-}
-
-#op  {
-      position: absolute;
-      top: 150px;
-      right: 150px;
-}
-
-#op > .bootstrap-select {
+      left: 400px;
+      height: 300px;
       width: 150px;
-}
+    }
 
-.params {
+#params_input_pressures {
       position: absolute;
       top: 200px;
-      right:80px;
+      left: 200px;
       height: 300px;
       width: 150px;
     }
@@ -346,7 +264,7 @@ div.folders{
      position: absolute;
      box-shadow: 0.5em 0.5em 0.7em;
      top: 80px;
-     left: 50px;
+     right: 200px;
      height: 600px;
      width: 600px;
      padding-left: 50px;
@@ -438,50 +356,3 @@ div.folders{
      z-index: 1;
 
   }
-
-/* Panel with infos about hardware and software */
-
-.hard_soft_infos_panel {
-
-     position: absolute;
-     box-shadow: 0.5em 0.5em 0.7em;
-     top: 300px;
-     right: 50px;
-     height: 300px;
-     width: 300px;
-     padding-left: 50px;
-     padding-top: 50px;
-     background-color: white;
-     z-index: 20;
-
-  }
-
-  /* options for processing */
-
-  .proc_opts {
-
-       position: absolute;
-       box-shadow: 0.5em 0.5em 0.7em;
-       top: 150px;
-       right: 50%;
-       height: 250px;
-       width: 300px;
-       padding-left: 50px;
-       padding-top: 50px;
-       background-color: white;
-       z-index: 20;
-
-    }
-
-    #model  {
-          position: absolute;
-          top: 50px;
-          right: 100px;
-          width: 50px;
-    }
-
-    /* model select */
-
-    #model > .bootstrap-select  {
-          width: 120px;
-    }
