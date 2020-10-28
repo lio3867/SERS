@@ -35,7 +35,6 @@ from flask import Flask, render_template, request, redirect    # Flask imports
 from flask_socketio import SocketIO, emit
 from sers_interface.modules.pages.define_all_pages import *
 from sers_interface.modules.util_interf import *
-from modules_unet.util_misc import *
 
 platf  = find_platform()
 
@@ -56,7 +55,9 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
-from MD093_1-1_modif import SERS
+from MD093_1_1_modif import SERS
+
+print('Imports are OK')
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -74,7 +75,7 @@ def set_curr_op(operation):
     '''
     global op
     op = operation
-    print('current operation is ', op)
+    print(f'current operation is {op}')
 
 @socketio.on('params') #
 def retrieve_params(prms):
@@ -83,6 +84,7 @@ def retrieve_params(prms):
     '''
     global params
     params = json.loads(prms)
+    print( f"### params are {params} ")
 
 def select_dic_proc(params):
     '''
@@ -198,6 +200,14 @@ def infos_hard_soft():
     except:
         print('working out of context')
 
+@app.route('/', methods=['GET', 'POST'])
+def main_page(debug=1):
+    '''
+    '''
+    dmp = define_main_page()
+
+    return render_template('index_folder.html', **dmp.__dict__)
+
 def full_addr(list_files):
     '''
 
@@ -235,25 +245,6 @@ def proc(save_addr, debug=1):
     print(f"address where to save the processings {save_addr} ")
     save_in = save_addr
 
-@app.route('/visu_results', methods = ['GET', 'POST'])
-def visu_results(debug=0):
-    '''
-    Page for data visualization
-    Possibility to visualize the processing with the associated controls
-    '''
-    define_visu_results()
-
-    return render_template('visu_results.html', **define_visu_results().__dict__) #
-
-@app.route('/processed', methods = ['GET', 'POST'])
-def processed(debug=0):
-    '''
-    List of all the previous processings for reexaminating them or erasing them.
-    '''
-    define_processed()
-
-    return render_template('processed.html', **define_processed().__dict__) #
-
 @app.route('/erase_processed', methods = ['GET', 'POST'])
 def erase_processed(debug=0):
     '''
@@ -268,72 +259,6 @@ def erase_processed(debug=0):
         print(f"removed {folder} ")
 
     return render_template('processed.html', **define_processed().__dict__) #
-
-
-def prepare_folder_download(debug=0):
-    '''
-    Delete and recreate folder in Download folder.
-    '''
-    if debug>0: print('##########  prepare_folder_download  !!!')
-    for dst_fold in ['Downloads', 'Téléchargements']:
-        d = op.join(os.path.expanduser('~'), dst_fold)
-        dst = op.join(d, 'Results')
-        if os.path.exists(dst):
-            try:
-                if debug>0: print("trying to erase folder {}".format(dst))
-                shutil.rmtree(dst)               # Delete destination folder if it exists
-            except:
-                print('######  could not find the folder {0}'.format(dst))
-        try:
-            os.mkdir(dst)        # Recreating the folder dst
-            if debug>0: print(f'############### using the folder {dst}')
-            return dst
-        except:
-            print('############### cannot make {0} folder'.format(dst))
-
-    return dst
-
-@app.route('/open_download', methods = ['GET', 'POST'])
-def open_download(debug=0):
-    '''
-    Open the folder in the system Download folder where stand the downloaded processings.
-    '''
-    for dst_fold in ['Downloads', 'Téléchargements']:
-        d = op.join(os.path.expanduser('~'), dst_fold)
-        dst = op.join(d, 'All_ILT_results')
-        if os.path.exists(dst):
-            addr_download = dst
-        else:
-            print('not the right path')
-    if debug>0: print('###### in /open_download  !!!')
-    open_folder(addr_download) #
-    os.remove(opj(os.getcwd(), 'static','download_ready.p'))       # Removing the link
-
-    return redirect(url_for('visu_results'))
-
-@app.route('/download', methods = ['GET', 'POST'])
-def download(debug=0):
-    '''
-    Copy the results files in Home/Download folder
-    Makes the copy with the explicit names in a folder named with the date
-    The folder contains list_proc.json, processing folder and controls folder
-    '''
-    dst = prepare_folder_download()
-    save_with_date(dest=dst, debug=1)
-    path_download_ready = op.join(os.getcwd(), 'static', 'download_ready.p')    # Indicates that the processing is ready for download
-    with open(path_download_ready, 'w') as f: f.write('ok')
-
-    return redirect(url_for('visu_results'))
-
-@app.route('/documentation')
-def documentation():
-    '''
-    Documentation about this program.
-    Gives informations about the theory, how to use the program etc..
-    '''
-    dd = define_documentation()
-
-    return render_template('documentation.html', **dd.__dict__)
 
 def shutdown_server():
     '''
@@ -357,11 +282,11 @@ def shutdown():
 def message_at_beginning(host,port):
     '''
     '''
-    print( Fore.YELLOW + """
+    print( Fore.YELLOW + f"""
     ***************************************************************
     Launching the Image Analysis program
 
-    address: {0}:{1}
+    address: {host}:{port}
 
     Drop the dataset in the drop zone,
     select the operation
@@ -373,13 +298,11 @@ def message_at_beginning(host,port):
     pip install gevent (Windows)
     pip install eventlet
 
-    """.format(host,port) )
+    """ )
 
 if __name__ == '__main__':
     init(app.config)                         # clean last processings and upload folders
-
-    port = 5044; host = '0.0.0.0' if platf == 'win' else '0.0.0.0'
-    # port = 5000 8080
+    port = 5000; host = '0.0.0.0'
     print("host is " , host)
     launch_browser(port, host, platf)
     message_at_beginning(host,port)
