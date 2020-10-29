@@ -9,8 +9,8 @@ ERRORS unsovled:
 
 
 
-28/05 (Mai)
-    1. Adjust the delay time based on the bubles flow time
+28/05/2020 (Mai)
+    1. Adjust the delay time based on the bubbles flow time
     2. Estimate and display the experiment time
     3. Save info of the delay spectra not in 'xx' but in number
 
@@ -26,17 +26,23 @@ import time
 import datetime
 from statistics import mean
 
-# from Fluigent_ess.ESS import Switchboard
-# from Fluigent_FRP.FRP import Flowboard
-# from Fluigent.SDK import fgt_init, fgt_close
-# from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRange
-#
-# import usb.core
-# import seabreeze.spectrometers as sb
+try:
+    from Fluigent_ess.ESS import Switchboard
+    from Fluigent_FRP.FRP import Flowboard
+    from Fluigent.SDK import fgt_init, fgt_close
+    from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRange
+
+    import usb.core
+    import seabreeze.spectrometers as sb
+except:
+    print("Some imports not working")
 
 # Clear all
-# from IPython import get_ipython
-# get_ipython().magic('reset -sf')
+try:
+    from IPython import get_ipython
+    get_ipython().magic('reset -sf')
+except:
+    print("Issue with IPython")
 
 class SERS():
     '''
@@ -60,11 +66,14 @@ class SERS():
 
         # k = delay_time/t_integration_s
 
-        # self.set_ESS()
-        # self.set_FRP()
-        # self.init_spectro()
-        # self.create_dataframe()
-        # self.begin_exp()
+        try:
+            self.set_ESS()
+            self.set_FRP()
+            self.init_spectro()
+            self.create_dataframe()
+            self.begin_exp()
+        except:
+            print("Some devices not detected perhaps")
 
     def set_ESS(self):
         '''
@@ -165,7 +174,7 @@ class SERS():
         '''
         print('stablizing ...')
         lval = [0, 1, 4, 5, 6]
-        [ fgt_set_pressure(lval[j], getattr(self, k)) for j,k,v in enumerate(self.my_pressure_input.items()) ]
+        [ fgt_set_pressure(lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
         time.sleep(t) #sec
 
     def close(self):
@@ -182,7 +191,7 @@ class SERS():
             [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
             [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
 
-    def save_results(self):
+    def concat_infos_and_intensities(self):
         '''
         '''
         self.dfIntensity.loc[len(self.dfIntensity)] = self.intensities
@@ -193,9 +202,10 @@ class SERS():
                                 round(self.Q1,2),round(self.Q2,2)]
         self.df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
 
-    def fill_infos(self):
+    def register_results(self):
         '''
         '''
+        self.list_Pout = ['Pa_out', 'Pb_out', 'Pc_out', 'Pd_out', 'Pe_out']
         for i in range(int(self.n)):
             self.Q1 = self.flowboard.get_flowrate(self.available_FRP_ports[0])
             self.Q2 = self.flowboard.get_flowrate(self.available_FRP_ports[1])
@@ -203,7 +213,7 @@ class SERS():
                 [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_Pout) ]
                 self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
                 self.intensities = self.spec.intensities()
-                self.save_results()
+                self.concat_infos_and_intensities()
             else:
                 self.plus_minus *= -1
                 self.count +=  1
@@ -211,22 +221,31 @@ class SERS():
                 print( f'plus_minus = {self.plus_minus} ' )
                 break
 
-    def one_step(self):
+    def save_to_csv(self):
+        '''
+        '''
+        self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
+        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
+
+    def change_pressures(self):
         '''
         '''
         self.Pa_temp +=  self.plus_minus*self.delta_P
         self.Pb_temp -=  self.plus_minus*self.delta_P
         fgt_set_pressure(0, self.Pa_temp)
         fgt_set_pressure(1, self.Pb_temp)
+
+    def one_step(self):
+        '''
+        '''
+        self.change_pressures()
         time.sleep(6)
         print(f'Applying P01245 =  {self.Pa_temp},{self.Pb_temp},{self.Pc_in},{self.Pd_in},{self.Pe_in} ')
         self.df_info =  pd.DataFrame(columns=self.df_info.columns)
         self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
         self.step_index +=  1
-        self.list_Pout = ['Pa_out', 'Pb_out', 'Pc_out', 'Pd_out', 'Pe_out']
-        self.fill_infos()
-        self.df_raw_data.to_csv('Data\d_{}.csv'.format(self.today), mode='a', header=False, index=True, sep=';')
-        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
+        self.register_results()
+        self.save_to_csv()
 
     def sweep_pressures(self):
         '''
@@ -251,7 +270,6 @@ class SERS():
             self.sw_step +=  1
             self.port_I = item
             self.port_II = item
-
             # print('Start pumping air')
             # switchboard.set_position("A", 10) # for pumping air
             # switchboard.set_position("B", 10) # for pumping air
@@ -267,7 +285,6 @@ class SERS():
             self.switchboard.set_position("B", self.port_II)
             print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
             print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
-
             # for i in np.arange(300):
             #     flow_list = []
             #     for j in np.arange(1,11):

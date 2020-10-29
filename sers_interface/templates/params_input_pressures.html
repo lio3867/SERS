@@ -1,35 +1,15 @@
-<!-- Parameters for the number cell counting -->
+<!-- input pressures -->
 
 <div id="params_input_pressures" >
 
-     <!-- <h4> Parameters </h4> -->
 
-    <!-- nb fits -->
-
-     <div>
-       <label for="nbfits"> P1 </label>
-       <input type="number"  id="P1"  value='0' style="width:50px; margin-left:20px;">
-     </div>
+    {% for i in [1,2,3,4,5] %}
 
      <div>
-       <label for="nbfits"> P2 </label>
-       <input type="number"  id="P2"  value='0' style="width:50px; margin-left:20px;">
+       <label for="nbfits"> P{{i}} </label>
+       <input type="number"  id="P{{i}}"  value='0' style="width:50px; margin-left:20px;">
      </div>
 
-     <div>
-       <label for="nbfits"> P3 </label>
-       <input type="number"  id="P3"  value='0' style="width:50px; margin-left:20px;">
-     </div>
+     {% endfor %}
 
-     <div>
-       <label for="nbfits"> P4 </label>
-       <input type="number"  id="P4"  value='0' style="width:50px; margin-left:20px;">
-     </div>
-
-     <div>
-       <label for="nbfits"> P5 </label>
-       <input type="number"  id="P5"  value='0' style="width:50px; margin-left:20px;">
-     </div>
-
-
-</div> <!-- end class params -->
+</div>
