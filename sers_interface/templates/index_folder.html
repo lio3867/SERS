@@ -32,9 +32,6 @@
 $(document).ready(function(){
     var socket = io.connect('http://' + document.domain + ':' + location.port );  //+ '/test'
 
-    // socket.on('response', function(msg){alert(msg.data)})
-
-
     //------- Launch the processing
 
     {% include 'proc_trig.html' %}

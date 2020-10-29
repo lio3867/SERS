@@ -1,6 +1,6 @@
 /*
 
-Retrieving files names and parameters for the processing
+Retrieving parameters for SERS experiment
 
 */
 
@@ -9,7 +9,7 @@ $('#processing').click(function(){                                              
     var list_params = []                         // params list
 
 
-       $('#params_input_pressures'  + ' :input').each(function(){                                // ## operation (nbcells, segm&trac etc..) parameters
+       $('#params_input_pressures  :input').each(function(){                                //  Input pressures
                if ($(this).hasClass('check')){
                   if ( $(this).is(':checked') ){
                      list_params.push($(this).attr('id'))                                  // giving checkboxes an ID attribute
@@ -18,7 +18,7 @@ $('#processing').click(function(){                                              
                else { list_params.push( $(this).attr('id') + ':' + $(this).val() )}          // retrieve id and value from input
              }) // end input
 
-       $('#params_general'  + ' :input').each(function(){                                // ## operation (nbcells, segm&trac etc..) parameters
+       $('#params_general :input').each(function(){                                //   QA,QB SW
                if ($(this).hasClass('check')){
                   if ( $(this).is(':checked') ){
                      list_params.push($(this).attr('id'))                                  // giving checkboxes an ID attribute
@@ -35,7 +35,7 @@ $('#processing').click(function(){                                              
                }
                else { list_params.push( $(this).attr('id') + ':' + $(this).val() )}          // retrieve id and value from input
              }) // end input
-        
+
 
     all_params = JSON.stringify(list_params)               // list of the parameters for the processing
 
