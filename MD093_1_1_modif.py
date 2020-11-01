@@ -20,11 +20,13 @@ ERRORS unsovled:
 """
 # spec.close()
 
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import time
 import datetime
 from statistics import mean
+from matplotlib import pyplot as plt
 
 try:
     from Fluigent_ess.ESS import Switchboard
@@ -191,10 +193,18 @@ class SERS():
             [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
             [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
 
+    def plot_intensities(self):
+        '''
+        '''
+        plt.plot(self.intensities)
+        addr_img = Path('sers_inteface') / 'static' / 'curr_pic' / 'intensities.png'
+        plt.savefig( str(addr_img) )
+
     def concat_infos_and_intensities(self):
         '''
         '''
         self.dfIntensity.loc[len(self.dfIntensity)] = self.intensities
+        self.plot_intensities()
         self.df_info.loc[len(self.df_info)] = [self.time_string, self.sw_step, self.port_I, self.port_II, self.step_index,
                                 self.Pa_temp, self.Pb_temp, self.Pc_in, self.Pd_in, self.Pe_in,
                                 round(self.Pa_out,2),round(self.Pb_out,2),

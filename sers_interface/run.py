@@ -74,8 +74,14 @@ def retrieve_params(prms):
     Retrieve the parameters from the interface
     '''
     global params
-    params = json.loads(prms)
+    params = { p.split(':')[0]:p.split(':')[1] for p in json.loads(prms) }
     print( f"### params are {params} ")
+    for k,v in params.items():
+        if k != 'sw':
+            setattr(sr, k, int(v))
+        if k == 'sw':
+            setattr(sr, k, v.split(','))
+    print(dir(sr))
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page(debug=1):
@@ -89,14 +95,14 @@ def proc(msg, debug=1):
     '''
     Process
     '''
-    emit('state', {'mess': 'beginning '})
-    server.sleep(0.05)
-
-    sr.stablize_to_balance_state(t=60)
-    sr.go_through_my_ESS_input()
-
-    server.sleep(0.05)
-    emit('end_proc','finished')
+    # emit('state', {'mess': 'beginning '})
+    # server.sleep(0.05)
+    #
+    # sr.stablize_to_balance_state(t=60)
+    # sr.go_through_my_ESS_input()
+    #
+    # server.sleep(0.05)
+    # emit('end_proc','finished')
 
 def shutdown_server():
     '''
