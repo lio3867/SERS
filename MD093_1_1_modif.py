@@ -20,6 +20,7 @@ ERRORS unsovled:
 """
 # spec.close()
 
+import os
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -27,6 +28,8 @@ import time
 import datetime
 from statistics import mean
 from matplotlib import pyplot as plt
+##
+from flask_socketio import emit
 
 try:
     from Fluigent_ess.ESS import Switchboard
@@ -46,6 +49,36 @@ try:
 except:
     print("Issue with IPython")
 
+from sys import platform as _platform
+
+def find_platform():
+    '''
+    Find which platform is currently used
+    '''
+    print('platform is ',_platform)
+    if _platform == "linux" or _platform == "linux2":
+       platf = 'lin'
+    elif _platform == "darwin":
+       platf = 'mac'
+    elif _platform == "win32":
+       platf = 'win'
+    return platf
+
+def chose_server(platf):
+    '''
+    '''
+    if platf =='win':
+        import gevent as server
+        from gevent import monkey
+        monkey.patch_all()
+    else:
+        import eventlet as server
+        server.monkey_patch()
+    return server
+
+platf  = find_platform()
+server = chose_server(platf)
+
 class SERS():
     '''
     '''
@@ -62,6 +95,7 @@ class SERS():
         self.step_index = 0
         self.plus_minus = 1
         ##
+        self.prepare_folders()
         self.n_from_inputs()           # Calculate n from inputs
         [setattr(self, k, v) for k,v in self.my_pressure_input.items()]
         self.print_params()
@@ -76,6 +110,12 @@ class SERS():
             self.begin_exp()
         except:
             print("Some devices not detected perhaps")
+
+    def prepare_folders(self):
+        '''
+        '''
+        if not os.path.exists('Data'):
+            os.mkdir('Data')
 
     def set_ESS(self):
         '''
@@ -197,8 +237,10 @@ class SERS():
         '''
         '''
         plt.plot(self.intensities)
-        addr_img = Path('sers_inteface') / 'static' / 'curr_pic' / 'intensities.png'
+        addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
         plt.savefig( str(addr_img) )
+        emit( 'addr_img', { 'mess': str(addr_img) } )
+        server.sleep(0.5)
 
     def concat_infos_and_intensities(self):
         '''
