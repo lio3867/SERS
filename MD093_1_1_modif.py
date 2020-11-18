@@ -31,16 +31,14 @@ from matplotlib import pyplot as plt
 ##
 from flask_socketio import emit
 
-try:
-    from Fluigent_ess.ESS import Switchboard
-    from Fluigent_FRP.FRP import Flowboard
-    from Fluigent.SDK import fgt_init, fgt_close
-    from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRange
+from Fluigent_ess.ESS import Switchboard
+from Fluigent_FRP.FRP import Flowboard
+from Fluigent.SDK import fgt_init, fgt_close
+from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRange
 
-    import usb.core
-    import seabreeze.spectrometers as sb
-except:
-    print("Some imports not working")
+import usb.core
+import seabreeze.spectrometers as sb
+
 
 # Clear all
 try:
@@ -86,11 +84,12 @@ class SERS():
 
         ## Set INPUT
         self.my_ESS_input = np.array([1,])
-        self.my_pressure_input = { 'Pa_in':250,'Pb_in':260,'Pc_in':220,'Pd_in':150,'Pe_in':115 }
-        self.t_integration_s = 15   #s
+        self.my_pressure_input = { 'P_oil_in':380,'P_NPs_in':280,'P_CroLIn_in':220,'P_Water_in':330,'P_Titrant_in':330 }
+        self.lval = [0, 1, 2, 4, 5]
+        self.t_integration_s = 5   #s
         self.t_step_min = 3         #min
         self.delta_P = 25
-        self.replicates = 1         # 2 for 1 replicate; #3 for 2 replicates
+        self.cycles = 1      
         # delay_time = 30 #s
         self.step_index = 0
         self.plus_minus = 1
@@ -132,6 +131,8 @@ class SERS():
         self.flowboard = Flowboard(FRP_serial_numbers[0])
         self.flowboard.set_calibration(1, "Water")
         self.flowboard.set_calibration(2, "Water")
+        self.flowboard.set_calibration(3, "Water")
+        self.flowboard.set_calibration(4, "Water")
         self.available_FRP_ports = self.flowboard.get_available_ports()
 
     def init_spectro(self):
@@ -145,6 +146,11 @@ class SERS():
         self.wl = self.spec.wavelengths()
         # wl_index = np.arange(len(wl))
 
+# class Data_handling():
+    def __init__(self):
+        pass
+
+        
     def prepare_df_info(self):
         '''
         '''
@@ -152,9 +158,9 @@ class SERS():
         SW_step = ['SW_step']
         switch = ['SW_I', 'SW_II']
         step = ['step']
-        pressure = ['Pa', 'Pb', 'Pc', 'Pd','Pe',
-                        'Pa_m', 'Pb_m', 'Pc_m', 'Pd_m', 'Pe_m']
-        FRP = ['Q1', 'Q2']
+        pressure = ['P_oil','P_NPs','P_CrosLIn','P_Water','P_Titrant',
+                'P_Oil_m','P_NPs_m','P_CrosLIn_m','P_Water_m','P_Titrant_m']
+        FRP = ['Q_NPs', 'Q_CrosLIn','Q_Water','Q_Titrant']
         ltit = [ pd.DataFrame(columns = i) for i in [ t, SW_step, switch, step, pressure, FRP ]]
         self.df_info = pd.concat(ltit, axis=1, sort=False)
 
@@ -169,6 +175,33 @@ class SERS():
         my_file = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
         self.today = datetime.datetime.today().strftime('%Y%m%d-%H%M')
         my_file.to_csv('Data\d_{}.csv'.format(self.today), index=True, sep=';')
+        
+    def plot_intensities(self):
+        '''
+        '''
+        plt.plot(self.intensities)
+        addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
+        plt.savefig( str(addr_img) )
+        
+    def concat_infos_and_intensities(self):
+        '''
+        '''
+        self.dfIntensity.loc[len(self.dfIntensity)] = self.intensities
+        self.plot_intensities()
+        self.df_info.loc[len(self.df_info)] = [self.time_string, self.sw_step, self.port_I, self.port_II, self.step_index,
+                                self.P_Oil_in, self.P_NPs_in, self.P_CrosLIn_in, self.P_Water_temp, self.P_Titrant_temp,
+                                round(self.P_Oil_m,2),round(self.P_NPs_m,2),round(self.P_CrosLIn_out,2),
+                                round(self.P_Water_m,2), round(self.P_Titrant_m,2),
+                                round(self.Q_NPs,2),round(self.Q_CrosLIn,2),round(self.Q_Water,2),round(self.Q_Titrant,2)]
+        self.df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
+    
+    def save_to_csv(self):
+        '''
+        '''
+        self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
+        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
+######------------------------------------------------------------------------#####
+
 
     def begin_exp(self):
         '''
@@ -195,7 +228,7 @@ class SERS():
         print( f'my_pressure_input = {self.my_pressure_input}')
         print( f't_integration_s = {self.t_integration_s}' )
         print( f'delta_P = {self.delta_P}' )
-        print( f'replicates = {self.replicates}' )
+        print( f'cycles = {self.cycles}' )
         print( f'n = {self.n}' )
 
     def estimate_experiment_time(self):
@@ -203,7 +236,7 @@ class SERS():
         '''
         ## Estimate the experiment time
         self.n_SW = self.my_ESS_input.size
-        self.t_exp_estimated = self.n_SW*self.t_step_min*10*self.replicates # in min
+        self.t_exp_estimated = self.n_SW*self.t_step_min*10*self.cycles # in min
         self.t_exp_estimated_hour = round(self.t_exp_estimated/60, 2)
         print(f'Experiment estimated time = {self.t_exp_estimated_hour} (hours)')
 
@@ -215,23 +248,26 @@ class SERS():
         P_in values
         '''
         print('stablizing ...')
-        lval = [0, 1, 4, 5, 6]
-        [ fgt_set_pressure(lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
+        # lval = [0, 1, 2, 4, 5]
+        [ fgt_set_pressure(self.lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
         time.sleep(t) #sec
 
     def close(self):
         '''
         '''
-        print('closing (take about 1 min)')
+        # print('closing (take about 1 min)')
         self.spec.close()
+        fgt_set_pressure(0, 0)
+        fgt_set_pressure(1, 0)
+        fgt_set_pressure(2, 0)
         fgt_set_pressure(4, 0)
-        fgt_set_pressure(6, 0)
-        for i in np.range(60):
-            time.sleep(1)
-            P_oil = fgt_get_pressure(4)
-            P_sers= fgt_get_pressure(5)
-            [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
-            [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
+        fgt_set_pressure(5, 0)
+        # for i in np.range(60):
+        #     time.sleep(1)
+        #     P_oil = fgt_get_pressure(4)
+        #     P_sers= fgt_get_pressure(5)
+        #     [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
+        #     [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
 
     def plot_intensities(self):
         '''
@@ -242,17 +278,7 @@ class SERS():
         emit( 'addr_img', { 'mess': str(addr_img) } )
         server.sleep(0.5)
 
-    def concat_infos_and_intensities(self):
-        '''
-        '''
-        self.dfIntensity.loc[len(self.dfIntensity)] = self.intensities
-        self.plot_intensities()
-        self.df_info.loc[len(self.df_info)] = [self.time_string, self.sw_step, self.port_I, self.port_II, self.step_index,
-                                self.Pa_temp, self.Pb_temp, self.Pc_in, self.Pd_in, self.Pe_in,
-                                round(self.Pa_out,2),round(self.Pb_out,2),
-                                round(self.Pc_out,2),round(self.Pd_out,2), round(self.Pe_out,2),
-                                round(self.Q1,2),round(self.Q2,2)]
-        self.df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
+    
 
     def register_results(self):
         '''
@@ -279,38 +305,66 @@ class SERS():
         self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
         self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
 
+
+######------------------------------------------------------------------------#####
+    def one_step(self):
+    '''
+    Run step by step until , then register results
+    '''
+    self.list_P_m = ['P_Oil_m', 'P_NPs_m', 'P_CrosLIn_m', 'P_Water_m', 'P_Titrant_m']
+    for i in range(int(self.n)):
+        self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
+        self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
+        if self.Q_Water > 2 and self.Q_Titrant > 2 and self.Q_Water < 54 and self.Q_Titrant < 54:
+            [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_P_m) ]
+            self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
+            self.intensities = self.spec.intensities()
+            self.concat_infos_and_intensities()
+        else:
+            self.plus_minus *= -1
+            self.cycle +=  1
+            print( f'n = {self.cycle}' )
+            print( f'plus_minus = {self.plus_minus} ' )
+            break
+    
     def change_pressures(self):
         '''
         '''
-        self.Pa_temp +=  self.plus_minus*self.delta_P
-        self.Pb_temp -=  self.plus_minus*self.delta_P
-        fgt_set_pressure(0, self.Pa_temp)
-        fgt_set_pressure(1, self.Pb_temp)
+        self.P_Water_temp +=  self.plus_minus*self.delta_P
+        self.P_Titrant_temp -=  self.plus_minus*self.delta_P
+        fgt_set_pressure(0, self.P_Water_temp)
+        fgt_set_pressure(1, self.P_Titrant_temp)
 
-    def one_step(self):
+    def one_cycle(self):
         '''
         '''
-        self.change_pressures()
-        time.sleep(6)
-        print(f'Applying P01245 =  {self.Pa_temp},{self.Pb_temp},{self.Pc_in},{self.Pd_in},{self.Pe_in} ')
+        # self.change_pressures()
+        self.P_Water_temp +=  self.plus_minus*self.delta_P
+        self.P_Titrant_temp -=  self.plus_minus*self.delta_P
+        fgt_set_pressure(0, self.P_Water_temp)
+        fgt_set_pressure(1, self.P_Titrant_temp)
+        time.sleep(6)         
+        print(f'Applying P_Oil_NPs_CrosLIn =  {self.P_Oil_in},{self.P_NPs_in},{self.P_CrosLIn_in}')
+        print(f'Applying P_Water_Titrant =  {self.P_Water_temp},{self.P_Titrant_temp}')
         self.df_info =  pd.DataFrame(columns=self.df_info.columns)
         self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
         self.step_index +=  1
-        self.register_results()
+        
+        self.one_step()
         self.save_to_csv()
 
     def sweep_pressures(self):
         '''
         '''
-        self.count = -1 # first haft of the period
-        self.Pa_temp = self.Pa_in - self.delta_P
-        self.Pb_temp = self.Pb_in + self.delta_P
+        self.period = -1 # first haft of the period
+        self.P_Water_temp = self.P_Water_in - self.delta_P
+        self.P_Titrant_temp = self.P_Titrant_in + self.delta_P
         for item in np.arange(50):
-            self.Q1 = self.flowboard.get_flowrate(self.available_FRP_ports[0])
-            self.Q2 = self.flowboard.get_flowrate(self.available_FRP_ports[1])
-            # if self.Q1 > 1 and self.Q2 > 1 and self.Q1 < 54 and self.Q2 < 54 and count < replicates:
-            if self.count < self.replicates:
-                self.one_step()
+            self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
+            self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
+            # if self.Q1 > 1 and self.Q2 > 1 and self.Q1 < 54 and self.Q2 < 54 and cycle < cycles:
+            if self.cycle < self.cycles:
+                self.one_cycle()
             else:
                 break
 
@@ -375,5 +429,5 @@ class SERS():
             #     df_delay = pd.concat([df_info_delay,dfIntensity_delay], axis=1, sort=False)
             # df_delay.to_csv('Data\d_{}.csv'.format(today), mode='a', header=False, index=True, sep=';')
             # df_delay = pd.DataFrame(columns=df_delay.columns)
-
-        self.close()
+######------------------------------------------------------------------------#####
+self.close()
