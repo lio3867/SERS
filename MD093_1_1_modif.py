@@ -77,7 +77,7 @@ def chose_server(platf):
 platf  = find_platform()
 server = chose_server(platf)
 
-class SERS():
+class PREP_EXP():
     '''
     '''
     def __init__(self):
@@ -89,7 +89,7 @@ class SERS():
         self.t_integration_s = 5   #s
         self.t_step_min = 3         #min
         self.delta_P = 25
-        self.cycles = 1      
+        self.cycles = 1
         # delay_time = 30 #s
         self.step_index = 0
         self.plus_minus = 1
@@ -146,74 +146,6 @@ class SERS():
         self.wl = self.spec.wavelengths()
         # wl_index = np.arange(len(wl))
 
-# class Data_handling():
-    def __init__(self):
-        pass
-
-        
-    def prepare_df_info(self):
-        '''
-        '''
-        t = ['t(s)']
-        SW_step = ['SW_step']
-        switch = ['SW_I', 'SW_II']
-        step = ['step']
-        pressure = ['P_oil','P_NPs','P_CrosLIn','P_Water','P_Titrant',
-                'P_Oil_m','P_NPs_m','P_CrosLIn_m','P_Water_m','P_Titrant_m']
-        FRP = ['Q_NPs', 'Q_CrosLIn','Q_Water','Q_Titrant']
-        ltit = [ pd.DataFrame(columns = i) for i in [ t, SW_step, switch, step, pressure, FRP ]]
-        self.df_info = pd.concat(ltit, axis=1, sort=False)
-
-    def create_dataframe(self):
-        '''
-        Create a Dataframe
-        '''
-
-        self.prepare_df_info()
-        self.dfIntensity = pd.DataFrame(columns = self.wl)
-        ##
-        my_file = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
-        self.today = datetime.datetime.today().strftime('%Y%m%d-%H%M')
-        my_file.to_csv('Data\d_{}.csv'.format(self.today), index=True, sep=';')
-        
-    def plot_intensities(self):
-        '''
-        '''
-        plt.plot(self.intensities)
-        addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
-        plt.savefig( str(addr_img) )
-        
-    def concat_infos_and_intensities(self):
-        '''
-        '''
-        self.dfIntensity.loc[len(self.dfIntensity)] = self.intensities
-        self.plot_intensities()
-        self.df_info.loc[len(self.df_info)] = [self.time_string, self.sw_step, self.port_I, self.port_II, self.step_index,
-                                self.P_Oil_in, self.P_NPs_in, self.P_CrosLIn_in, self.P_Water_temp, self.P_Titrant_temp,
-                                round(self.P_Oil_m,2),round(self.P_NPs_m,2),round(self.P_CrosLIn_out,2),
-                                round(self.P_Water_m,2), round(self.P_Titrant_m,2),
-                                round(self.Q_NPs,2),round(self.Q_CrosLIn,2),round(self.Q_Water,2),round(self.Q_Titrant,2)]
-        self.df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
-    
-    def save_to_csv(self):
-        '''
-        '''
-        self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
-        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
-######------------------------------------------------------------------------#####
-
-
-    def begin_exp(self):
-        '''
-        '''
-        time_start_tuple = time.localtime() # get struct_time
-        time_start = time.strftime("%H:%M:%S", time_start_tuple)
-        print('Start experiment at ', time_start)
-        self.switchboard.set_position("A", self.my_ESS_input[0])
-        self.switchboard.set_position("B", self.my_ESS_input[0])
-        print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
-        print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
-
     def n_from_inputs(self):
         '''
         '''
@@ -240,34 +172,35 @@ class SERS():
         self.t_exp_estimated_hour = round(self.t_exp_estimated/60, 2)
         print(f'Experiment estimated time = {self.t_exp_estimated_hour} (hours)')
 
-    def Average(self,lst):
-        return mean(lst)
+class DATA_HANDLING():
+    def __init__(self):
+        pass
 
-    def stablize_to_balance_state(self,t=10):
-        '''
-        P_in values
-        '''
-        print('stablizing ...')
-        # lval = [0, 1, 2, 4, 5]
-        [ fgt_set_pressure(self.lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
-        time.sleep(t) #sec
 
-    def close(self):
+    def prepare_df_info(self):
         '''
         '''
-        # print('closing (take about 1 min)')
-        self.spec.close()
-        fgt_set_pressure(0, 0)
-        fgt_set_pressure(1, 0)
-        fgt_set_pressure(2, 0)
-        fgt_set_pressure(4, 0)
-        fgt_set_pressure(5, 0)
-        # for i in np.range(60):
-        #     time.sleep(1)
-        #     P_oil = fgt_get_pressure(4)
-        #     P_sers= fgt_get_pressure(5)
-        #     [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
-        #     [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
+        t = ['t(s)']
+        SW_step = ['SW_step']
+        switch = ['SW_I', 'SW_II']
+        step = ['step']
+        pressure = ['P_oil','P_NPs','P_CrosLIn','P_Water','P_Titrant',
+                'P_Oil_m','P_NPs_m','P_CrosLIn_m','P_Water_m','P_Titrant_m']
+        FRP = ['Q_NPs', 'Q_CrosLIn','Q_Water','Q_Titrant']
+        ltit = [ pd.DataFrame(columns = i) for i in [ t, SW_step, switch, step, pressure, FRP ]]
+        self.df_info = pd.concat(ltit, axis=1, sort=False)
+
+    def create_dataframe(self):
+        '''
+        Create a Dataframe
+        '''
+
+        self.prepare_df_info()
+        self.dfIntensity = pd.DataFrame(columns = self.wl)
+        ##
+        my_file = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
+        self.today = datetime.datetime.today().strftime('%Y%m%d-%H%M')
+        my_file.to_csv('Data\d_{}.csv'.format(self.today), index=True, sep=';')
 
     def plot_intensities(self):
         '''
@@ -275,10 +208,24 @@ class SERS():
         plt.plot(self.intensities)
         addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
         plt.savefig( str(addr_img) )
-        emit( 'addr_img', { 'mess': str(addr_img) } )
-        server.sleep(0.5)
 
-    
+    def concat_infos_and_intensities(self):
+        '''
+        '''
+        self.dfIntensity.loc[len(self.dfIntensity)] = self.intensities
+        self.plot_intensities()
+        self.df_info.loc[len(self.df_info)] = [self.time_string, self.sw_step, self.port_I, self.port_II, self.step_index,
+                                self.P_Oil_in, self.P_NPs_in, self.P_CrosLIn_in, self.P_Water_temp, self.P_Titrant_temp,
+                                round(self.P_Oil_m,2),round(self.P_NPs_m,2),round(self.P_CrosLIn_out,2),
+                                round(self.P_Water_m,2), round(self.P_Titrant_m,2),
+                                round(self.Q_NPs,2),round(self.Q_CrosLIn,2),round(self.Q_Water,2),round(self.Q_Titrant,2)]
+        self.df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
+
+    def save_to_csv(self):
+        '''
+        '''
+        self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
+        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
 
     def register_results(self):
         '''
@@ -299,34 +246,60 @@ class SERS():
                 print( f'plus_minus = {self.plus_minus} ' )
                 break
 
-    def save_to_csv(self):
+class EXPERIM(DATA_HANDLING, PREP_EXP):
+    '''
+    '''
+    def __init__(self):
+        PREP_EXP.__init__(self)
+        DATA_HANDLING.__init__(self)
+
+######------------------------------------------------------------------------##### Init, close, save
+
+    def Average(self,lst):
+        return mean(lst)
+
+    def stablize_to_balance_state(self,t=10):
+        '''
+        P_in values
+        '''
+        print('stablizing ...')
+        # lval = [0, 1, 2, 4, 5]
+        [ fgt_set_pressure(self.lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
+        time.sleep(t) #sec
+
+######------------------------------------------------------------------------##### Actions
+
+    def begin_exp(self):
         '''
         '''
-        self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
-        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
+        time_start_tuple = time.localtime() # get struct_time
+        time_start = time.strftime("%H:%M:%S", time_start_tuple)
+        print('Start experiment at ', time_start)
+        self.switchboard.set_position("A", self.my_ESS_input[0])
+        self.switchboard.set_position("B", self.my_ESS_input[0])
+        print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
+        print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
 
-
-######------------------------------------------------------------------------#####
     def one_step(self):
-    '''
-    Run step by step until , then register results
-    '''
-    self.list_P_m = ['P_Oil_m', 'P_NPs_m', 'P_CrosLIn_m', 'P_Water_m', 'P_Titrant_m']
-    for i in range(int(self.n)):
-        self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
-        self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
-        if self.Q_Water > 2 and self.Q_Titrant > 2 and self.Q_Water < 54 and self.Q_Titrant < 54:
-            [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_P_m) ]
-            self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
-            self.intensities = self.spec.intensities()
-            self.concat_infos_and_intensities()
-        else:
-            self.plus_minus *= -1
-            self.cycle +=  1
-            print( f'n = {self.cycle}' )
-            print( f'plus_minus = {self.plus_minus} ' )
-            break
-    
+        '''
+        Run step by step until , then register results
+        '''
+        self.list_P_m = ['P_Oil_m', 'P_NPs_m', 'P_CrosLIn_m', 'P_Water_m', 'P_Titrant_m']
+        for i in range(int(self.n)):
+            self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
+            self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
+            if self.Q_Water > 2 and self.Q_Titrant > 2 and self.Q_Water < 54 and self.Q_Titrant < 54:
+                [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_P_m) ]
+                self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
+                self.intensities = self.spec.intensities()
+                self.concat_infos_and_intensities()
+            else:
+                self.plus_minus *= -1
+                self.cycle +=  1
+                print( f'n = {self.cycle}' )
+                print( f'plus_minus = {self.plus_minus} ' )
+                break
+
     def change_pressures(self):
         '''
         '''
@@ -343,13 +316,13 @@ class SERS():
         self.P_Titrant_temp -=  self.plus_minus*self.delta_P
         fgt_set_pressure(0, self.P_Water_temp)
         fgt_set_pressure(1, self.P_Titrant_temp)
-        time.sleep(6)         
+        time.sleep(6)
         print(f'Applying P_Oil_NPs_CrosLIn =  {self.P_Oil_in},{self.P_NPs_in},{self.P_CrosLIn_in}')
         print(f'Applying P_Water_Titrant =  {self.P_Water_temp},{self.P_Titrant_temp}')
         self.df_info =  pd.DataFrame(columns=self.df_info.columns)
         self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
         self.step_index +=  1
-        
+
         self.one_step()
         self.save_to_csv()
 
@@ -367,6 +340,23 @@ class SERS():
                 self.one_cycle()
             else:
                 break
+
+    def close(self):
+        '''
+        '''
+        # print('closing (take about 1 min)')
+        self.spec.close()
+        fgt_set_pressure(0, 0)
+        fgt_set_pressure(1, 0)
+        fgt_set_pressure(2, 0)
+        fgt_set_pressure(4, 0)
+        fgt_set_pressure(5, 0)
+        # for i in np.range(60):
+        #     time.sleep(1)
+        #     P_oil = fgt_get_pressure(4)
+        #     P_sers= fgt_get_pressure(5)
+        #     [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
+        #     [ fgt_set_pressure(j, 0)  for j in [0,1,5
 
     def go_through_my_ESS_input(self):
         '''
