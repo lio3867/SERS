@@ -15,8 +15,6 @@ ERRORS unsovled:
     3. Save info of the delay spectra not in 'xx' but in number
 
 
-
-
 """
 # spec.close()
 
@@ -173,6 +171,9 @@ class PREP_EXP():
         print(f'Experiment estimated time = {self.t_exp_estimated_hour} (hours)')
 
 class DATA_HANDLING():
+    '''
+    '''
+
     def __init__(self):
         pass
 
@@ -253,11 +254,6 @@ class EXPERIM(DATA_HANDLING, PREP_EXP):
         PREP_EXP.__init__(self)
         DATA_HANDLING.__init__(self)
 
-######------------------------------------------------------------------------##### Init, close, save
-
-    def Average(self,lst):
-        return mean(lst)
-
     def stablize_to_balance_state(self,t=10):
         '''
         P_in values
@@ -266,8 +262,6 @@ class EXPERIM(DATA_HANDLING, PREP_EXP):
         # lval = [0, 1, 2, 4, 5]
         [ fgt_set_pressure(self.lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
         time.sleep(t) #sec
-
-######------------------------------------------------------------------------##### Actions
 
     def begin_exp(self):
         '''
@@ -356,7 +350,7 @@ class EXPERIM(DATA_HANDLING, PREP_EXP):
         #     P_oil = fgt_get_pressure(4)
         #     P_sers= fgt_get_pressure(5)
         #     [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
-        #     [ fgt_set_pressure(j, 0)  for j in [0,1,5
+        #     [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
 
     def go_through_my_ESS_input(self):
         '''

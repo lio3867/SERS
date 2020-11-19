@@ -55,10 +55,10 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
-from MD093_1_1_modif import SERS
+from MD093_1_1_modif import EXPERIM
 
 print('Imports are OK')
-sr = SERS()
+exp = EXPERIM()
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -98,8 +98,8 @@ def proc(msg, debug=1):
     # emit('state', {'mess': 'beginning '})
     # server.sleep(0.05)
     #
-    # sr.stablize_to_balance_state(t=60)
-    # sr.go_through_my_ESS_input()
+    # exp.stablize_to_balance_state(t=60)
+    # exp.go_through_my_ESS_input()
     #
     # server.sleep(0.05)
     # emit('end_proc','finished')
