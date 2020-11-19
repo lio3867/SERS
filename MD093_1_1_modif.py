@@ -247,7 +247,7 @@ class DATA_HANDLING():
                 print( f'plus_minus = {self.plus_minus} ' )
                 break
 
-class EXPERIM(DATA_HANDLING, PREP_EXP):
+class EXPERIM(PREP_EXP,DATA_HANDLING):
     '''
     '''
     def __init__(self):
@@ -259,7 +259,6 @@ class EXPERIM(DATA_HANDLING, PREP_EXP):
         P_in values
         '''
         print('stablizing ...')
-        # lval = [0, 1, 2, 4, 5]
         [ fgt_set_pressure(self.lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
         time.sleep(t) #sec
 
@@ -282,7 +281,9 @@ class EXPERIM(DATA_HANDLING, PREP_EXP):
         for i in range(int(self.n)):
             self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
             self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
-            if self.Q_Water > 2 and self.Q_Titrant > 2 and self.Q_Water < 54 and self.Q_Titrant < 54:
+            cnd0 = 2 < self.Q_Titrant < 54
+            cnd1 = 2 < self.Q_Water < 54
+            if cnd0 and cnd1 :
                 [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_P_m) ]
                 self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
                 self.intensities = self.spec.intensities()
@@ -294,13 +295,13 @@ class EXPERIM(DATA_HANDLING, PREP_EXP):
                 print( f'plus_minus = {self.plus_minus} ' )
                 break
 
-    def change_pressures(self):
-        '''
-        '''
-        self.P_Water_temp +=  self.plus_minus*self.delta_P
-        self.P_Titrant_temp -=  self.plus_minus*self.delta_P
-        fgt_set_pressure(0, self.P_Water_temp)
-        fgt_set_pressure(1, self.P_Titrant_temp)
+    # def change_pressures(self):
+    #     '''
+    #     '''
+    #     self.P_Water_temp +=  self.plus_minus*self.delta_P
+    #     self.P_Titrant_temp -=  self.plus_minus*self.delta_P
+    #     fgt_set_pressure(0, self.P_Water_temp)
+    #     fgt_set_pressure(1, self.P_Titrant_temp)
 
     def one_cycle(self):
         '''
