@@ -271,15 +271,17 @@ class EXPERIM(PREP_EXP,DATA_HANDLING,INTERF):
     def one_step(self):
         '''
         Run step by step until , then register results
+        Define self.P_oil_m, self.P_NPs_m etc..
         '''
-        self.list_P_m = ['P_Oil_m', 'P_NPs_m', 'P_CrosLIn_m', 'P_Water_m', 'P_Titrant_m']
         for i in range(int(self.n)):
             self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
             self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
             cnd0 = 2 < self.Q_Titrant < 54
             cnd1 = 2 < self.Q_Water < 54
             if cnd0 and cnd1 :
-                [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_P_m) ]
+                for inj in self.injected:
+                    p = fgt_get_pressure(getattr(self, f'gate_{inj}'))
+                    setattr(self, f'P_{inj}_m',p)                                      # define self.P_oil_m, self.P_NPs_m etc..
                 self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
                 self.intensities = self.spec.intensities()
                 self.concat_infos_and_intensities()
