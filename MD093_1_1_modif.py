@@ -82,22 +82,21 @@ class PREP_EXP():
 
         ## Set INPUT
         self.my_ESS_input = np.array([1,])
-        self.my_pressure_input = { 'P_oil_in':380,'P_NPs_in':280,'P_CroLIn_in':220,'P_Water_in':330,'P_Titrant_in':330 }
-        self.lval = [0, 1, 2, 4, 5]
+        self.make_pressure_gate_variables()
         self.t_integration_s = 5   #s
         self.t_step_min = 3         #min
         self.delta_P = 25
         self.cycles = 1
-        # delay_time = 30 #s
+        self.delay_time = 30 #s
         self.step_index = 0
         self.plus_minus = 1
         ##
         self.prepare_folders()
         self.n_from_inputs()           # Calculate n from inputs
-        [setattr(self, k, v) for k,v in self.my_pressure_input.items()]
+
         self.print_params()
 
-        # k = delay_time/t_integration_s
+        self.k = self.delay_time/self.t_integration_s
 
         try:
             self.set_ESS()
@@ -107,6 +106,15 @@ class PREP_EXP():
             self.begin_exp()
         except:
             print("Some devices not detected perhaps")
+
+    def make_pressure_gate_variables(self):
+        '''
+        '''
+        self.injected = ['oil', 'NPs', 'CroLIn', 'Water', 'Titrant']
+        self.pressure_input = { 'P_oil_in':380,'P_NPs_in':280,'P_CroLIn_in':220,'P_Water_in':330,'P_Titrant_in':330 }
+        self.gate_input = { 'gate_oil':0,'gate_NPs':1,'gate_CroLIn':2,'gate_Water':4,'gate_Titrant':5 }
+        [setattr(self, k, v) for k,v in self.pressure_input.items()]       # self.P_oil_in, self.P_NPs_in etc..
+        [setattr(self, k, v) for k,v in self.gate_input.items()]           # self.gate_oil, self.gate_NPs etc..
 
     def prepare_folders(self):
         '''
@@ -142,20 +150,19 @@ class PREP_EXP():
         self.spec = sb.Spectrometer(devices[0])
         self.spec.integration_time_micros(self.t_integration)
         self.wl = self.spec.wavelengths()
-        # wl_index = np.arange(len(wl))
 
     def n_from_inputs(self):
         '''
         '''
-        self.t_each_step = self.t_step_min*60 #s
-        self.t_integration = self.t_integration_s*(1e6) #1e6 = 1s
+        self.t_each_step = self.t_step_min*60 # s
+        self.t_integration = self.t_integration_s*(1e6) # 1e6 = 1s
         self.n = self.t_each_step/(self.t_integration/1e6)
 
     def print_params(self):
         '''
         '''
         print( f'my_ESS_input =  {self.my_ESS_input}')
-        print( f'my_pressure_input = {self.my_pressure_input}')
+        print( f'pressure_input = {self.pressure_input}')
         print( f't_integration_s = {self.t_integration_s}' )
         print( f'delta_P = {self.delta_P}' )
         print( f'cycles = {self.cycles}' )
@@ -176,7 +183,6 @@ class DATA_HANDLING():
 
     def __init__(self):
         pass
-
 
     def prepare_df_info(self):
         '''
@@ -203,13 +209,6 @@ class DATA_HANDLING():
         self.today = datetime.datetime.today().strftime('%Y%m%d-%H%M')
         my_file.to_csv('Data\d_{}.csv'.format(self.today), index=True, sep=';')
 
-    def plot_intensities(self):
-        '''
-        '''
-        plt.plot(self.intensities)
-        addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
-        plt.savefig( str(addr_img) )
-
     def concat_infos_and_intensities(self):
         '''
         '''
@@ -228,38 +227,34 @@ class DATA_HANDLING():
         self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
         self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
 
-    def register_results(self):
-        '''
-        '''
-        self.list_Pout = ['Pa_out', 'Pb_out', 'Pc_out', 'Pd_out', 'Pe_out']
-        for i in range(int(self.n)):
-            self.Q1 = self.flowboard.get_flowrate(self.available_FRP_ports[0])
-            self.Q2 = self.flowboard.get_flowrate(self.available_FRP_ports[1])
-            if self.Q1 > 2 and self.Q2 > 2 and self.Q1 < 54 and self.Q2 < 54:
-                [ settatr(self,k,fgt_get_pressure(j)) for j,k in enumerate(self.list_Pout) ]
-                self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
-                self.intensities = self.spec.intensities()
-                self.concat_infos_and_intensities()
-            else:
-                self.plus_minus *= -1
-                self.count +=  1
-                print( f'n = {self.count}' )
-                print( f'plus_minus = {self.plus_minus} ' )
-                break
+class INTERF():
+    '''
+    Interface
+    '''
+    def __init__(self):
+        pass
 
-class EXPERIM(PREP_EXP,DATA_HANDLING):
+    def plot_intensities(self):
+        '''
+        '''
+        plt.plot(self.intensities)
+        addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
+        plt.savefig( str(addr_img) )
+
+class EXPERIM(PREP_EXP,DATA_HANDLING,INTERF):
     '''
     '''
     def __init__(self):
         PREP_EXP.__init__(self)
         DATA_HANDLING.__init__(self)
+        INTERF.__init__(self)
 
     def stablize_to_balance_state(self,t=10):
         '''
         P_in values
         '''
-        print('stablizing ...')
-        [ fgt_set_pressure(self.lval[j], getattr(self, k)) for j,(k,v) in enumerate(self.my_pressure_input.items()) ]
+        print('stabilizing ...')
+        [ fgt_set_pressure(getattr(self, f'gate_{inj}'), getattr(self, f'P_{inj}_in')) for inj in self.injected ]
         time.sleep(t) #sec
 
     def begin_exp(self):
@@ -295,18 +290,9 @@ class EXPERIM(PREP_EXP,DATA_HANDLING):
                 print( f'plus_minus = {self.plus_minus} ' )
                 break
 
-    # def change_pressures(self):
-    #     '''
-    #     '''
-    #     self.P_Water_temp +=  self.plus_minus*self.delta_P
-    #     self.P_Titrant_temp -=  self.plus_minus*self.delta_P
-    #     fgt_set_pressure(0, self.P_Water_temp)
-    #     fgt_set_pressure(1, self.P_Titrant_temp)
-
     def one_cycle(self):
         '''
         '''
-        # self.change_pressures()
         self.P_Water_temp +=  self.plus_minus*self.delta_P
         self.P_Titrant_temp -=  self.plus_minus*self.delta_P
         fgt_set_pressure(0, self.P_Water_temp)
@@ -316,15 +302,15 @@ class EXPERIM(PREP_EXP,DATA_HANDLING):
         print(f'Applying P_Water_Titrant =  {self.P_Water_temp},{self.P_Titrant_temp}')
         self.df_info =  pd.DataFrame(columns=self.df_info.columns)
         self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
-        self.step_index +=  1
-
-        self.one_step()
-        self.save_to_csv()
+        self.step_index +=  1     # increment step
+        self.one_step()           # make the step
+        self.save_to_csv()        # save
 
     def sweep_pressures(self):
         '''
+        Go through various pressures
         '''
-        self.period = -1 # first haft of the period
+        self.period = -1                                       # first haft of the period
         self.P_Water_temp = self.P_Water_in - self.delta_P
         self.P_Titrant_temp = self.P_Titrant_in + self.delta_P
         for item in np.arange(50):
@@ -336,22 +322,30 @@ class EXPERIM(PREP_EXP,DATA_HANDLING):
             else:
                 break
 
+    def set_p(self,inj,p):
+        '''
+        inj : injected product
+        p : pressure
+        '''
+        fgt_set_pressure(geattr(self,inj),p)
+
     def close(self):
         '''
+        Finishing the experiment
         '''
         # print('closing (take about 1 min)')
         self.spec.close()
-        fgt_set_pressure(0, 0)
-        fgt_set_pressure(1, 0)
-        fgt_set_pressure(2, 0)
-        fgt_set_pressure(4, 0)
-        fgt_set_pressure(5, 0)
-        # for i in np.range(60):
-        #     time.sleep(1)
-        #     P_oil = fgt_get_pressure(4)
-        #     P_sers= fgt_get_pressure(5)
-        #     [ fgt_set_pressure(j, P_sers) if P_sers > P_oil else fgt_set_pressure(j, P_oil) for j in [0,1,5] ]
-        #     [ fgt_set_pressure(j, 0)  for j in [0,1,5] ]
+        # fgt_set_pressure(0, 0)
+        # fgt_set_pressure(1, 0)
+        # fgt_set_pressure(2, 0)
+        # fgt_set_pressure(4, 0)
+        # fgt_set_pressure(5, 0)
+        for i in np.range(60):
+            time.sleep(1)
+            P_oil = fgt_get_pressure(4)
+            P_sers= fgt_get_pressure(5)
+            [ self.set_p(inj, P_sers) if P_sers > P_oil else self.set_p(inj, P_oil) for inj in ['oil','NPs','Titrant'] ]
+            [ self.set_p(inj, 0)  for inj in ['oil','NPs','Titrant'] ]
 
     def go_through_my_ESS_input(self):
         '''
@@ -361,58 +355,71 @@ class EXPERIM(PREP_EXP,DATA_HANDLING):
             self.sw_step +=  1
             self.port_I = item
             self.port_II = item
-            # print('Start pumping air')
-            # switchboard.set_position("A", 10) # for pumping air
-            # switchboard.set_position("B", 10) # for pumping air
-            # fgt_set_pressure(1, 500) # for pumping air
-            # time.sleep(2)
-            # for i in np.arange(300):
-            #     time.sleep(0.5)
-            #     if flowboard.get_flowrate(available_FRP_ports[0]) < 1:
-            #         print('air starting in flow unit')
-            #         break
-            # t0 = time.time()
+            ##
             self.switchboard.set_position("A", self.port_I)
             self.switchboard.set_position("B", self.port_II)
             print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
             print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
-            # for i in np.arange(300):
-            #     flow_list = []
-            #     for j in np.arange(1,11):
-            #         time.sleep(0.5)
-            #         flow_list.append(flowboard.get_flowrate(available_FRP_ports[0]))
-            #     if Average(flow_list) > 50:  #(= after x seconds, there is no air flow)
-            #         break
-            # print('Stop pumping air')
-            # stablize_to_balance_state(t=15)
-            # t1 = time.time()
+            ##
             self.sweep_pressures()
-            # stablize_to_balance_state(t=1)
-            # print('Recording spectra during delay time')
-            # df_info_delay =  pd.DataFrame(columns=df_info.columns)
-            # dfIntensity_delay = pd.DataFrame(columns=dfIntensity.columns)
 
-            # t_delay = t1 - t0 + 30
-            # print('t_delay = ', t_delay)
-            # k = 60/t_integration_s
+def class NOT_FINISHED_CODE():
+    '''
+    '''
+    def protocole(self):
+        '''
+        '''
+        print('Start pumping air')
+        switchboard.set_position("A", 10) # for pumping air
+        switchboard.set_position("B", 10) # for pumping air
+        fgt_set_pressure(1, 500) # for pumping air
+        time.sleep(2)
+        for i in np.arange(300):
+            time.sleep(0.5)
+            if flowboard.get_flowrate(available_FRP_ports[0]) < 1:
+                print('air starting in flow unit')
+                break
+        t0 = time.time()
+        ##########
+        for i in np.arange(300):
+            flow_list = []
+            for j in np.arange(1,11):
+                time.sleep(0.5)
+                flow_list.append(flowboard.get_flowrate(available_FRP_ports[0]))
+            if Average(flow_list) > 50:  #(= after x seconds, there is no air flow)
+                break
+        print('Stop pumping air')
+        stablize_to_balance_state(t=15)
+        t1 = time.time()
+        ###########
+        stablize_to_balance_state(t=1)
+        print('Recording spectra during delay time')
+        df_info_delay =  pd.DataFrame(columns=df_info.columns)
+        dfIntensity_delay = pd.DataFrame(columns=dfIntensity.columns)
 
-            # for i in range(int(k)):
-            #     time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
-            #     intensities = spec.intensities()
-            #     P1_delay = fgt_get_pressure(0)
-            #     P2_delay = fgt_get_pressure(1)
-            #     P3_delay = fgt_get_pressure(2)
-            #     P4_delay = fgt_get_pressure(3)
-            #     QA_delay = flowboard.get_flowrate(available_FRP_ports[0])
-            #     QB_delay = flowboard.get_flowrate(available_FRP_ports[1])
-            #     dfIntensity_delay.loc[len(dfIntensity_delay)] = intensities
-            #     step_index = step_index+1
-            #     df_info_delay.loc[len(df_info_delay)] = [time_string, sw_step, port_I, port_II, step_index,
-            #                                                       P1_in, P2_in, P3_in, P4_in,
-            #                   round(P1_delay,2), round(P2_delay,2), round(P3_delay,2), round(P4_delay,2),
-            #                                                       round(QA_delay,2),round(QB_delay,2)]
-            #     df_delay = pd.concat([df_info_delay,dfIntensity_delay], axis=1, sort=False)
-            # df_delay.to_csv('Data\d_{}.csv'.format(today), mode='a', header=False, index=True, sep=';')
-            # df_delay = pd.DataFrame(columns=df_delay.columns)
+        t_delay = t1 - t0 + 30
+        print('t_delay = ', t_delay)
+        k = 60/t_integration_s
+
+        for i in range(int(k)):
+            time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
+            intensities = spec.intensities()
+            P1_delay = fgt_get_pressure(0)
+            P2_delay = fgt_get_pressure(1)
+            P3_delay = fgt_get_pressure(2)
+            P4_delay = fgt_get_pressure(3)
+            QA_delay = flowboard.get_flowrate(available_FRP_ports[0])
+            QB_delay = flowboard.get_flowrate(available_FRP_ports[1])
+            dfIntensity_delay.loc[len(dfIntensity_delay)] = intensities
+            step_index = step_index+1
+            df_info_delay.loc[len(df_info_delay)] = [time_string, sw_step, port_I, port_II, step_index,
+                                                              P1_in, P2_in, P3_in, P4_in,
+                          round(P1_delay,2), round(P2_delay,2), round(P3_delay,2), round(P4_delay,2),
+                                                              round(QA_delay,2),round(QB_delay,2)]
+            df_delay = pd.concat([df_info_delay,dfIntensity_delay], axis=1, sort=False)
+        df_delay.to_csv('Data\d_{}.csv'.format(today), mode='a', header=False, index=True, sep=';')
+        df_delay = pd.DataFrame(columns=df_delay.columns)
+
+
 ######------------------------------------------------------------------------#####
 self.close()
