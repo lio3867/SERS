@@ -4,16 +4,6 @@ Created on Tue Feb  4 09:59:04 2020
 
 @author: Ngoc Mai DUONG
 
-ERRORS unsovled:
-    1. spec.close()
-
-
-
-28/05/2020 (Mai)
-    1. Adjust the delay time based on the bubbles flow time
-    2. Estimate and display the experiment time
-    3. Save info of the delay spectra not in 'xx' but in number
-
 
 """
 # spec.close()
@@ -75,56 +65,72 @@ def chose_server(platf):
 platf  = find_platform()
 server = chose_server(platf)
 
-class PREP_EXP():
+class INPUT():
     '''
     '''
     def __init__(self):
-
         ## Set INPUT
         self.my_ESS_input = np.array([1,])
         self.make_pressure_gate_variables()
         self.t_integration_s = 5   #s
-        self.t_step_min = 3         #min
+        self.t_step_min = 2         #min
         self.delta_P = 25
         self.cycles = 1
-        self.delay_time = 30 #s
+        ## other variables
         self.step_index = 0
         self.plus_minus = 1
-        ##
-        self.prepare_folders()
-        self.n_from_inputs()           # Calculate n from inputs
-
+        ## print info
         self.print_params()
+        self.estimate_experiment_time()
 
-        self.k = self.delay_time/self.t_integration_s
+    def make_pressure_gate_variables(self):
+        '''
+        '''
+        self.injected = ['Oil', 'NPs', 'CrosLIn', 'Water', 'Titrant']
+        self.pressure_input = { 'P_Oil_in':400,'P_NPs_in':370,'P_CrosLIn_in':300,'P_Water_in':330,'P_Titrant_in':320 }
+        self.gate_input = { 'gate_Oil':0,'gate_NPs':1,'gate_CrosLIn':2,'gate_Water':4,'gate_Titrant':5 }
+        [setattr(self, k, v) for k,v in self.pressure_input.items()]       # self.P_Oil_in, self.P_NPs_in etc..
+        [setattr(self, k, v) for k,v in self.gate_input.items()]           # self.gate_Oil, self.gate_NPs etc..
 
+    def print_params(self):
+        '''
+        '''
+        print( f'my_ESS_input =  {self.my_ESS_input}')
+        print( f'pressure_input = {self.pressure_input}')
+        print( f't_integration_s = {self.t_integration_s}' )
+        print( f'delta_P = {self.delta_P}' )
+        print( f'cycles = {self.cycles}' )
+        self.N_points()
+        print( f'n points = {self.n_points}' )
+
+    def N_points(self):
+        '''
+        '''
+        self.t_each_step = self.t_step_min*60 # s
+        self.t_integration = self.t_integration_s*(1e6) # 1e6 = 1s
+        self.n_points = self.t_each_step/(self.t_integration/1e6)
+
+    def estimate_experiment_time(self):
+        '''
+        '''
+        ## Estimate the experiment time
+        self.n_SW = self.my_ESS_input.size
+        self.t_exp_estimated = self.n_SW*self.t_step_min*10*self.cycles # in min
+        self.t_exp_estimated_hour = round(self.t_exp_estimated/60, 2)
+        print(f'Experiment estimated time = {self.t_exp_estimated_hour} (hours)')
+
+class INIT_INSTRUMENTS():
+    def __init__():
         try:
             self.set_ESS()
             self.set_FRP()
             self.init_spectro()
             self.create_dataframe()
-            self.begin_exp()
         except:
             print("Some devices not detected perhaps")
 
-    def make_pressure_gate_variables(self):
-        '''
-        '''
-        self.injected = ['oil', 'NPs', 'CroLIn', 'Water', 'Titrant']
-        self.pressure_input = { 'P_oil_in':380,'P_NPs_in':280,'P_CroLIn_in':220,'P_Water_in':330,'P_Titrant_in':330 }
-        self.gate_input = { 'gate_oil':0,'gate_NPs':1,'gate_CroLIn':2,'gate_Water':4,'gate_Titrant':5 }
-        [setattr(self, k, v) for k,v in self.pressure_input.items()]       # self.P_oil_in, self.P_NPs_in etc..
-        [setattr(self, k, v) for k,v in self.gate_input.items()]           # self.gate_oil, self.gate_NPs etc..
-
-    def prepare_folders(self):
-        '''
-        '''
-        if not os.path.exists('Data'):
-            os.mkdir('Data')
-
     def set_ESS(self):
         '''
-        Set up ESS
         '''
         ESS_serial_numbers = Switchboard.detect()
         self.switchboard = Switchboard(ESS_serial_numbers[0])
@@ -151,38 +157,19 @@ class PREP_EXP():
         self.spec.integration_time_micros(self.t_integration)
         self.wl = self.spec.wavelengths()
 
-    def n_from_inputs(self):
-        '''
-        '''
-        self.t_each_step = self.t_step_min*60 # s
-        self.t_integration = self.t_integration_s*(1e6) # 1e6 = 1s
-        self.n = self.t_each_step/(self.t_integration/1e6)
-
-    def print_params(self):
-        '''
-        '''
-        print( f'my_ESS_input =  {self.my_ESS_input}')
-        print( f'pressure_input = {self.pressure_input}')
-        print( f't_integration_s = {self.t_integration_s}' )
-        print( f'delta_P = {self.delta_P}' )
-        print( f'cycles = {self.cycles}' )
-        print( f'n = {self.n}' )
-
-    def estimate_experiment_time(self):
-        '''
-        '''
-        ## Estimate the experiment time
-        self.n_SW = self.my_ESS_input.size
-        self.t_exp_estimated = self.n_SW*self.t_step_min*10*self.cycles # in min
-        self.t_exp_estimated_hour = round(self.t_exp_estimated/60, 2)
-        print(f'Experiment estimated time = {self.t_exp_estimated_hour} (hours)')
-
 class DATA_HANDLING():
     '''
     '''
-
     def __init__(self):
-        pass
+        self.prepare_folders()
+        self.prepare_df_info()
+        self.create_dataframe()
+
+    def prepare_folders(self):
+        '''
+        '''
+        if not os.path.exists('Data'):
+            os.mkdir('Data')
 
     def prepare_df_info(self):
         '''
@@ -191,7 +178,7 @@ class DATA_HANDLING():
         SW_step = ['SW_step']
         switch = ['SW_I', 'SW_II']
         step = ['step']
-        pressure = ['P_oil','P_NPs','P_CrosLIn','P_Water','P_Titrant',
+        pressure = ['P_Oil','P_NPs','P_CrosLIn','P_Water','P_Titrant',
                 'P_Oil_m','P_NPs_m','P_CrosLIn_m','P_Water_m','P_Titrant_m']
         FRP = ['Q_NPs', 'Q_CrosLIn','Q_Water','Q_Titrant']
         ltit = [ pd.DataFrame(columns = i) for i in [ t, SW_step, switch, step, pressure, FRP ]]
@@ -216,7 +203,7 @@ class DATA_HANDLING():
         self.plot_intensities()
         self.df_info.loc[len(self.df_info)] = [self.time_string, self.sw_step, self.port_I, self.port_II, self.step_index,
                                 self.P_Oil_in, self.P_NPs_in, self.P_CrosLIn_in, self.P_Water_temp, self.P_Titrant_temp,
-                                round(self.P_Oil_m,2),round(self.P_NPs_m,2),round(self.P_CrosLIn_out,2),
+                                round(self.P_Oil_m,2),round(self.P_NPs_m,2),round(self.P_CrosLIn_m,2),
                                 round(self.P_Water_m,2), round(self.P_Titrant_m,2),
                                 round(self.Q_NPs,2),round(self.Q_CrosLIn,2),round(self.Q_Water,2),round(self.Q_Titrant,2)]
         self.df_raw_data = pd.concat([self.df_info,self.dfIntensity], axis=1, sort=False)
@@ -224,8 +211,11 @@ class DATA_HANDLING():
     def save_to_csv(self):
         '''
         '''
-        self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
-        self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
+        try:
+            self.df_raw_data.to_csv(f'Data\d_{self.today}.csv', mode='a', header=False, index=True, sep=';')
+            self.df_raw_data = pd.DataFrame(columns=self.df_raw_data.columns)
+        except:
+            print("self.df_raw_data has to be created before saving...")
 
 class INTERF():
     '''
@@ -237,19 +227,32 @@ class INTERF():
     def plot_intensities(self):
         '''
         '''
-        plt.plot(self.intensities)
-        addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
-        plt.savefig( str(addr_img) )
+        try:
+            plt.plot(self.intensities)
+            addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
+            plt.savefig( str(addr_img) )
+        except:
+	    pass
+            #print('The address is incorrect, correct if called from the interface')
 
-class EXPERIM(PREP_EXP,DATA_HANDLING,INTERF):
+
+class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
     '''
     '''
     def __init__(self):
-        PREP_EXP.__init__(self)
+        INPUT.__init__(self)
+        INIT_INSTRUMENTS.__init__(self)
         DATA_HANDLING.__init__(self)
         INTERF.__init__(self)
 
-    def stablize_to_balance_state(self,t=10):
+        # self.stablize_to_balance_state(t=10)
+        # self.print_info()
+        # self.launch_exp()
+
+        # self.close()
+
+
+    def stablize_to_balance_state(self, t = 20):
         '''
         P_in values
         '''
@@ -257,7 +260,7 @@ class EXPERIM(PREP_EXP,DATA_HANDLING,INTERF):
         [ fgt_set_pressure(getattr(self, f'gate_{inj}'), getattr(self, f'P_{inj}_in')) for inj in self.injected ]
         time.sleep(t) #sec
 
-    def begin_exp(self):
+    def print_info(self):
         '''
         '''
         time_start_tuple = time.localtime() # get struct_time
@@ -268,88 +271,7 @@ class EXPERIM(PREP_EXP,DATA_HANDLING,INTERF):
         print( f"Switch on port A is at position {self.switchboard.get_position('A')}" )
         print( f"Switch on port B is at position {self.switchboard.get_position('B')}" )
 
-    def one_step(self):
-        '''
-        Run step by step until , then register results
-        Define self.P_oil_m, self.P_NPs_m etc..
-        '''
-        for i in range(int(self.n)):
-            self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
-            self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
-            cnd0 = 2 < self.Q_Titrant < 54
-            cnd1 = 2 < self.Q_Water < 54
-            if cnd0 and cnd1 :
-                for inj in self.injected:
-                    p = fgt_get_pressure(getattr(self, f'gate_{inj}'))
-                    setattr(self, f'P_{inj}_m',p)                                      # define self.P_oil_m, self.P_NPs_m etc..
-                self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
-                self.intensities = self.spec.intensities()
-                self.concat_infos_and_intensities()
-            else:
-                self.plus_minus *= -1
-                self.cycle +=  1
-                print( f'n = {self.cycle}' )
-                print( f'plus_minus = {self.plus_minus} ' )
-                break
-
-    def one_cycle(self):
-        '''
-        '''
-        self.P_Water_temp +=  self.plus_minus*self.delta_P
-        self.P_Titrant_temp -=  self.plus_minus*self.delta_P
-        fgt_set_pressure(0, self.P_Water_temp)
-        fgt_set_pressure(1, self.P_Titrant_temp)
-        time.sleep(6)
-        print(f'Applying P_Oil_NPs_CrosLIn =  {self.P_Oil_in},{self.P_NPs_in},{self.P_CrosLIn_in}')
-        print(f'Applying P_Water_Titrant =  {self.P_Water_temp},{self.P_Titrant_temp}')
-        self.df_info =  pd.DataFrame(columns=self.df_info.columns)
-        self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
-        self.step_index +=  1     # increment step
-        self.one_step()           # make the step
-        self.save_to_csv()        # save
-
-    def sweep_pressures(self):
-        '''
-        Go through various pressures
-        '''
-        self.period = -1                                       # first haft of the period
-        self.P_Water_temp = self.P_Water_in - self.delta_P
-        self.P_Titrant_temp = self.P_Titrant_in + self.delta_P
-        for item in np.arange(50):
-            self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
-            self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
-            # if self.Q1 > 1 and self.Q2 > 1 and self.Q1 < 54 and self.Q2 < 54 and cycle < cycles:
-            if self.cycle < self.cycles:
-                self.one_cycle()
-            else:
-                break
-
-    def set_p(self,inj,p):
-        '''
-        inj : injected product
-        p : pressure
-        '''
-        fgt_set_pressure(geattr(self,inj),p)
-
-    def close(self):
-        '''
-        Finishing the experiment
-        '''
-        # print('closing (take about 1 min)')
-        self.spec.close()
-        # fgt_set_pressure(0, 0)
-        # fgt_set_pressure(1, 0)
-        # fgt_set_pressure(2, 0)
-        # fgt_set_pressure(4, 0)
-        # fgt_set_pressure(5, 0)
-        for i in np.range(60):
-            time.sleep(1)
-            P_oil = fgt_get_pressure(4)
-            P_sers= fgt_get_pressure(5)
-            [ self.set_p(inj, P_sers) if P_sers > P_oil else self.set_p(inj, P_oil) for inj in ['oil','NPs','Titrant'] ]
-            [ self.set_p(inj, 0)  for inj in ['oil','NPs','Titrant'] ]
-
-    def go_through_my_ESS_input(self):
+    def launch_exp(self):
         '''
         '''
         self.sw_step = 0
@@ -365,63 +287,88 @@ class EXPERIM(PREP_EXP,DATA_HANDLING,INTERF):
             ##
             self.sweep_pressures()
 
-def class NOT_FINISHED_CODE():
-    '''
-    '''
-    def protocole(self):
+    def sweep_pressures(self):
+        '''
+        Go through various pressures
+        '''
+        self.cycle = 0                                     # first half of the period
+        self.P_Water_temp = self.P_Water_in - self.delta_P
+        self.P_Titrant_temp = self.P_Titrant_in + self.delta_P
+        for item in np.arange(50):
+            self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
+            self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
+            # if self.Q1 > 1 and self.Q2 > 1 and self.Q1 < 54 and self.Q2 < 54 and cycle < cycles:
+            if self.cycle < self.cycles:
+                self.one_cycle()
+            else:
+                break
+
+    def one_cycle(self):
         '''
         '''
-        print('Start pumping air')
-        switchboard.set_position("A", 10) # for pumping air
-        switchboard.set_position("B", 10) # for pumping air
-        fgt_set_pressure(1, 500) # for pumping air
-        time.sleep(2)
-        for i in np.arange(300):
-            time.sleep(0.5)
-            if flowboard.get_flowrate(available_FRP_ports[0]) < 1:
-                print('air starting in flow unit')
-                break
-        t0 = time.time()
-        ##########
-        for i in np.arange(300):
-            flow_list = []
-            for j in np.arange(1,11):
-                time.sleep(0.5)
-                flow_list.append(flowboard.get_flowrate(available_FRP_ports[0]))
-            if Average(flow_list) > 50:  #(= after x seconds, there is no air flow)
-                break
-        print('Stop pumping air')
-        stablize_to_balance_state(t=15)
-        t1 = time.time()
-        ###########
-        stablize_to_balance_state(t=1)
-        print('Recording spectra during delay time')
-        df_info_delay =  pd.DataFrame(columns=df_info.columns)
-        dfIntensity_delay = pd.DataFrame(columns=dfIntensity.columns)
+        self.P_Water_temp +=  self.plus_minus*self.delta_P
+        self.P_Titrant_temp -=  self.plus_minus*self.delta_P
 
-        t_delay = t1 - t0 + 30
-        print('t_delay = ', t_delay)
-        k = 60/t_integration_s
+        fgt_set_pressure(self.gate_Water, self.P_Water_temp)
+        fgt_set_pressure(self.gate_Titrant, self.P_Water_temp)
 
-        for i in range(int(k)):
-            time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
-            intensities = spec.intensities()
-            P1_delay = fgt_get_pressure(0)
-            P2_delay = fgt_get_pressure(1)
-            P3_delay = fgt_get_pressure(2)
-            P4_delay = fgt_get_pressure(3)
-            QA_delay = flowboard.get_flowrate(available_FRP_ports[0])
-            QB_delay = flowboard.get_flowrate(available_FRP_ports[1])
-            dfIntensity_delay.loc[len(dfIntensity_delay)] = intensities
-            step_index = step_index+1
-            df_info_delay.loc[len(df_info_delay)] = [time_string, sw_step, port_I, port_II, step_index,
-                                                              P1_in, P2_in, P3_in, P4_in,
-                          round(P1_delay,2), round(P2_delay,2), round(P3_delay,2), round(P4_delay,2),
-                                                              round(QA_delay,2),round(QB_delay,2)]
-            df_delay = pd.concat([df_info_delay,dfIntensity_delay], axis=1, sort=False)
-        df_delay.to_csv('Data\d_{}.csv'.format(today), mode='a', header=False, index=True, sep=';')
-        df_delay = pd.DataFrame(columns=df_delay.columns)
+        time.sleep(6)
+        print(f'Applying =  {self.P_Water_temp},{self.P_Titrant_temp}')
+        self.df_info =  pd.DataFrame(columns=self.df_info.columns)
+        self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
+        self.step_index +=  1     # increment step
+        self.one_step()           # make the step
+        self.save_to_csv()        # save
+
+    def one_step(self):
+        '''
+        Run step by step until , then register results
+        Define self.P_Oil_m, self.P_NPs_m etc..
+        '''
+        for i in range(int(self.n_points)):
+            self.Q_NPs = self.flowboard.get_flowrate(self.available_FRP_ports[0])
+            self.Q_CrosLIn = self.flowboard.get_flowrate(self.available_FRP_ports[1])
+            self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
+            self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
+            cnd0 = 2 < self.Q_Titrant < 54
+            cnd1 = 2 < self.Q_Water < 54
+            cnd2 = 2 < self.Q_NPs
+            cnd3 = 2 < self.Q_CrosLIn
+            if cnd0 and cnd1 and cnd2 and cnd3:
+                for inj in self.injected:
+                    p = fgt_get_pressure(getattr(self, f'gate_{inj}'))
+                    setattr(self, f'P_{inj}_m',p)                                      # define self.P_Oil_m, self.P_NPs_m etc..
+                self.time_string = datetime.datetime.now().strftime("%H:%M:%S.%f")
+                self.intensities = self.spec.intensities()
+                self.concat_infos_and_intensities()
+            else:
+                self.plus_minus *= -1
+                self.cycle +=  1
+                print( f'n = {self.cycle}' )
+                print( f'plus_minus = {self.plus_minus} ' )
+                break
+
+    def close(self):
+        '''
+        Finishing the experiment
+        '''
+        # print('closing (take about 1 min)')
+        self.spec.close()
+        # [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
+
+        fgt_set_pressure(self.gate_Oil, 0)
+        for i in range(60):
+            time.sleep(1)
+            P_Oil = fgt_get_pressure(self.gate_Oil)
+            [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]
+
 
 
 ######------------------------------------------------------------------------#####
-self.close()
+if __name__ == '__main__':
+    Exp1 = EXPERIM()
+
+    Exp1.stablize_to_balance_state(5)
+    Exp1.print_info()
+    Exp1.launch_exp()
+    Exp1.close()
