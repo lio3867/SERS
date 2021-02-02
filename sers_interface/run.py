@@ -81,6 +81,12 @@ def load_params_in_Exp(Exp, params):
     except:
         pass
 
+def send_estimated_time():
+    '''
+    '''
+    Exp1.estimate_experiment_time()
+    emit('estim_time_hour', Exp1.t_exp_estimated_hour)
+
 @socketio.on('params') #
 def retrieve_params(prms, debug=[]):
     '''
@@ -91,6 +97,7 @@ def retrieve_params(prms, debug=[]):
     params = { p.split(':')[0]:p.split(':')[1] for p in json.loads(prms) }
     print( f"### params are { params } ")
     load_params_in_Exp(Exp1, params)
+    send_estimated_time()
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page(debug=1):
