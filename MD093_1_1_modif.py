@@ -72,10 +72,10 @@ class INPUT():
         ## Set INPUT
         self.my_ESS_input = np.array([1,])
         self.make_pressure_gate_variables()
-        self.t_integration_s = 5   #s
-        self.t_step_min = 2         #min
-        self.delta_P = 25
-        self.cycles = 1
+        self.t_integration_s = 15   #s
+        self.t_step_min = 3         #min
+        self.delta_P = 20
+        self.cycles = 3
         ## other variables
         self.step_index = 0
         self.plus_minus = 1
@@ -87,7 +87,7 @@ class INPUT():
         '''
         '''
         self.injected = ['Oil', 'NPs', 'CrosLIn', 'Water', 'Titrant']
-        self.pressure_input = { 'P_Oil_in':400,'P_NPs_in':370,'P_CrosLIn_in':300,'P_Water_in':330,'P_Titrant_in':320 }
+        self.pressure_input = { 'P_Oil_in':780,'P_NPs_in':770,'P_CrosLIn_in':580,'P_Water_in':600,'P_Titrant_in':600 }
         self.gate_input = { 'gate_Oil':0,'gate_NPs':1,'gate_CrosLIn':2,'gate_Water':4,'gate_Titrant':5 }
         [setattr(self, k, v) for k,v in self.pressure_input.items()]       # self.P_Oil_in, self.P_NPs_in etc..
         [setattr(self, k, v) for k,v in self.gate_input.items()]           # self.gate_Oil, self.gate_NPs etc..
@@ -232,9 +232,8 @@ class INTERF():
             addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig( str(addr_img) )
         except:
-	    pass
-            #print('The address is incorrect, correct if called from the interface')
-
+            # print('we are not using interface')
+            pass
 
 class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
     '''
@@ -298,7 +297,7 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
             self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
             self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
             # if self.Q1 > 1 and self.Q2 > 1 and self.Q1 < 54 and self.Q2 < 54 and cycle < cycles:
-            if self.cycle < self.cycles:
+            if self.cycle <= self.cycles:
                 self.one_cycle()
             else:
                 break
@@ -310,10 +309,10 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         self.P_Titrant_temp -=  self.plus_minus*self.delta_P
 
         fgt_set_pressure(self.gate_Water, self.P_Water_temp)
-        fgt_set_pressure(self.gate_Titrant, self.P_Water_temp)
-
-        time.sleep(6)
-        print(f'Applying =  {self.P_Water_temp},{self.P_Titrant_temp}')
+        fgt_set_pressure(self.gate_Titrant, self.P_Titrant_temp)
+        time.sleep(15)
+        
+        print(f'Applying = {self.P_Oil_in},{self.P_NPs_in},{ self.P_CrosLIn_in},{self.P_Water_temp},{self.P_Titrant_temp}')
         self.df_info =  pd.DataFrame(columns=self.df_info.columns)
         self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
         self.step_index +=  1     # increment step
@@ -330,8 +329,8 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
             self.Q_CrosLIn = self.flowboard.get_flowrate(self.available_FRP_ports[1])
             self.Q_Water = self.flowboard.get_flowrate(self.available_FRP_ports[2])
             self.Q_Titrant = self.flowboard.get_flowrate(self.available_FRP_ports[3])
-            cnd0 = 2 < self.Q_Titrant < 54
-            cnd1 = 2 < self.Q_Water < 54
+            cnd0 = 2 < self.Q_Titrant < 80
+            cnd1 = 2 < self.Q_Water < 80
             cnd2 = 2 < self.Q_NPs
             cnd3 = 2 < self.Q_CrosLIn
             if cnd0 and cnd1 and cnd2 and cnd3:
@@ -344,7 +343,7 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
             else:
                 self.plus_minus *= -1
                 self.cycle +=  1
-                print( f'n = {self.cycle}' )
+                print( f'cycle no = {self.cycle}' )
                 print( f'plus_minus = {self.plus_minus} ' )
                 break
 
@@ -352,7 +351,7 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         '''
         Finishing the experiment
         '''
-        # print('closing (take about 1 min)')
+        print('closing (take about 1 min)')
         self.spec.close()
         # [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
 
@@ -360,8 +359,8 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         for i in range(60):
             time.sleep(1)
             P_Oil = fgt_get_pressure(self.gate_Oil)
-            [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]
-
+            [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]       
+        [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]     
 
 
 ######------------------------------------------------------------------------#####

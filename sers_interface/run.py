@@ -3,7 +3,7 @@
 
 """
 
-Image Analysis program
+SERS program
 
 pip install flask-socketio
 pip install eventlet
@@ -15,7 +15,8 @@ python -m sers_interface.run
 from __future__ import print_function, division, absolute_import
 
 import errno, os, sys, csv, json, glob, logging
-opd, opb, opj = os.path.dirname, os.path.basename, os.path.join
+op = os.path
+opd, opb, opj = op.dirname, op.basename, op.join
 import shutil as sh
 from colorama import Fore, Back, Style      # Color in the Terminal
 import time
@@ -55,10 +56,12 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
-from MD093_1_1_modif import EXPERIM
-
-print('Imports are OK')
-exp = EXPERIM()
+try:
+    from MD093_1_1_modif import EXPERIM
+    print('Imports are OK')
+    exp = EXPERIM()
+except:
+    print('not using MD093_1_1_modif')
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -128,13 +131,9 @@ def message_at_beginning(host,port):
     '''
     print( Fore.YELLOW + f"""
     ***************************************************************
-    Launching the Image Analysis program
+    Launching the SERS program
 
     address: {host}:{port}
-
-    Drop the dataset in the drop zone,
-    select the operation
-    and click on "processings"
 
     Addons :
 

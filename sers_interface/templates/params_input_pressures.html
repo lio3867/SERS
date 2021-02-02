@@ -2,38 +2,23 @@
 
 <div id="params_input_pressures" >
 
-
+    {% set lgates = ['Oil', 'NPs', 'CrosLin', 'Water', 'Titrant'] %}
+    {% set lreserv = ['Mineral', 'batch MD087', 'PEG,PEI,EBT', 'Evian water', 'EDTA 4mM'] %}
     {% for i in [1,2,3,4,5] %}
 
-     <div>
-       <label for="nbfits"> P{{i}} </label>
-       <input type="number"  id="P{{i}}"  value='0' style="width:50px; margin-left:20px;">
-     </div>
+         <div class='gate' style="left:{{i*70}}px;">
+             <div class='tit_gate' > Gate{{i}} </div>
+             <div > {{lgates[i-1]}} </div>
+             <div class='tit_reserv' > {{lreserv[i-1]}} </div>
+             <input class='input_gate' type="number"  id="P{{i}}"  value='0' >
+             <div></div>
+             <input class='value_gate' type="number"  id="Pvalue{{i}}" >
+         </div>
 
      {% endfor %}
 
-     <!-- integration time -->
-
-     <div>
-       <label for=""> integ time </label>
-       <input type="number"  id="t_integration_s"  value='15' style="width:50px; margin-left:20px;">
-     </div>
-
-     <!-- time step -->
-
-     <div>
-       <label for=""> time step </label>
-       <input type="number"  id="t_step_min"  value='3' style="width:50px; margin-left:20px;">
-     </div>
-
-     <div>
-       <label for=""> delta P </label>
-       <input type="number"  id="delta_P"  value='25' style="width:50px; margin-left:20px;">
-     </div>
-
-     <div>
-       <label for=""> replicates </label>
-       <input type="number"  id="replicates"  value='1' style="width:50px; margin-left:20px;">
-     </div>
+     <div class='name_param_gate' style="top:50px;" > Reservoir </div>
+     <div class='name_param_gate' style="top:70px;" > Request </div>
+     <div class='name_param_gate' style="top:97px;" > Measured </div>
 
 </div>
