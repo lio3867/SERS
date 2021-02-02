@@ -59,7 +59,7 @@ socketio = SocketIO(app)
 try:
     from MD093_1_1_modif import EXPERIM
     print('Imports are OK')
-    exp = EXPERIM()
+    Exp1 = EXPERIM()
 except:
     print('not using MD093_1_1_modif')
 
@@ -71,14 +71,26 @@ def test_connect():
     emit('response', {'data': 'Connected'})
     server.sleep(0.05)
 
+def load_params_in_Exp(Exp, params):
+    '''
+    Exp : experiment object
+    params : experiment parameters from the interface
+    '''
+    try:
+        [ setattr(Exp,k,v) for k,v in params.items() ]
+    except:
+        pass
+
 @socketio.on('params') #
-def retrieve_params(prms):
+def retrieve_params(prms, debug=[]):
     '''
     Retrieve the parameters from the interface
     '''
     global params
+    if 1 in debug: print(f'json file is { json.loads(prms) }')
     params = { p.split(':')[0]:p.split(':')[1] for p in json.loads(prms) }
     print( f"### params are { params } ")
+    load_params_in_Exp(Exp1, params)
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page(debug=1):
@@ -92,14 +104,17 @@ def proc(msg, debug=1):
     '''
     Process
     '''
-    # emit('state', {'mess': 'beginning '})
-    # server.sleep(0.05)
-    #
-    # exp.stablize_to_balance_state(t=60)
-    # exp.go_through_my_ESS_input()
-    #
-    # server.sleep(0.05)
-    # emit('end_proc','finished')
+
+    emit('state', {'mess': 'beginning '})
+    server.sleep(0.05)
+
+    # Exp1.stablize_to_balance_state(5)
+    # Exp1.print_info()
+    # Exp1.launch_exp()
+    # Exp1.close()
+
+    server.sleep(0.05)
+    emit('end_proc','finished')
 
 def shutdown_server():
     '''

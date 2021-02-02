@@ -27,7 +27,6 @@ from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRan
 import usb.core
 import seabreeze.spectrometers as sb
 
-
 # Clear all
 try:
     from IPython import get_ipython
@@ -311,7 +310,7 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         fgt_set_pressure(self.gate_Water, self.P_Water_temp)
         fgt_set_pressure(self.gate_Titrant, self.P_Titrant_temp)
         time.sleep(15)
-        
+
         print(f'Applying = {self.P_Oil_in},{self.P_NPs_in},{ self.P_CrosLIn_in},{self.P_Water_temp},{self.P_Titrant_temp}')
         self.df_info =  pd.DataFrame(columns=self.df_info.columns)
         self.dfIntensity = pd.DataFrame(columns=self.dfIntensity.columns)
@@ -359,8 +358,8 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         for i in range(60):
             time.sleep(1)
             P_Oil = fgt_get_pressure(self.gate_Oil)
-            [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]       
-        [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]     
+            [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]
+        [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
 
 
 ######------------------------------------------------------------------------#####
