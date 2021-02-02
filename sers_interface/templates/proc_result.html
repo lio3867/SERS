@@ -27,19 +27,6 @@
 
 <script >
 
-  $(".proc_pics_panel").draggable()                                          // make the window draggable
-  $('#win_mini').click(function(){
-      $('.proc_pics_panel').css({'height':'75px', 'width':'300px'})          // reduce the size of the window
-      $('#curr_proc_pic').hide()
-  })
-  $('#win_maxi').click(function(){
-      $('.proc_pics_panel').css({'height':'600px', 'width':'600px'})         // reduce the size of the window
-      $('#curr_proc_pic').show()
-  })
-  $('#win_close').click(function(){
-      $('.proc_pics_panel').hide()                                           // close the window
-      $('#curr_proc_pic').hide()
-  })
 
   // Change image
 
@@ -58,9 +45,6 @@
       var max_nb_im = $('#win_num_im').text().split('/')[1]
       $('#win_num_im').text(num + '/' + max_nb_im)
   }
-
-  $('#butt_img_up').click(function(){  img_up_dwn('up') })      // image up
-  $('#butt_img_down').click(function(){  img_up_dwn('down') })  // image down
 
 
 

@@ -16,11 +16,11 @@
 
 {% include 'proc_steps.html' %}
 
-{% include 'proc_time.html' %}
-
 {% include 'proc_result.html' %}
 
 {% include 'params_experim.html' %}
+
+{% include 'spec_plot.html' %}
 
 {% include 'proc.html' %}
 
@@ -48,10 +48,6 @@ $(document).ready(function(){
     //------- Indicates which file is currently processed
 
     {% include 'proc_curr_refresh.html' %}
-
-    //------- Refresh proc time
-
-    {% include 'proc_time_refresh.html' %}
 
     //------- Name of the last processing done..
 

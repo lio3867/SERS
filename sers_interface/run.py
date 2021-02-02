@@ -78,13 +78,7 @@ def retrieve_params(prms):
     '''
     global params
     params = { p.split(':')[0]:p.split(':')[1] for p in json.loads(prms) }
-    print( f"### params are {params} ")
-    for k,v in params.items():
-        if k != 'sw':
-            setattr(sr, k, int(v))
-        if k == 'sw':
-            setattr(sr, k, v.split(','))
-    print(dir(sr))
+    print( f"### params are { params } ")
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page(debug=1):

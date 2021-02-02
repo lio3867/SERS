@@ -4,24 +4,33 @@ Retrieving parameters for SERS experiment
 
 */
 
-$('#processing').click(function(){                                                        // submit processing, associated to launch processings
+$('#processing').click(function(){                                                           // submit processing, associated to launch processings
 
     var list_params = []                         // params list
 
 
-       $('#params_input_pressures  :input').each(function(){                                //  Input pressures
+       $('#params_input_pressures  :input').each(function(){                                 //  Input pressures
                if ($(this).hasClass('check')){
                   if ( $(this).is(':checked') ){
-                     list_params.push($(this).attr('id'))                                  // giving checkboxes an ID attribute
+                     list_params.push($(this).attr('id'))                                    // giving checkboxes an ID attribute
                    }
                }
                else { list_params.push( $(this).attr('id') + ':' + $(this).val() )}          // retrieve id and value from input
              }) // end input
 
-       $('#params_general :input').each(function(){                                //   QA,QB SW
+       $('#params_timings :input').each(function(){                                //
                if ($(this).hasClass('check')){
                   if ( $(this).is(':checked') ){
-                     list_params.push($(this).attr('id'))                                  // giving checkboxes an ID attribute
+                     list_params.push($(this).attr('id'))                                    // giving checkboxes an ID attribute
+                   }
+               }
+               else { list_params.push( $(this).attr('id') + ':' + $(this).val() )}          // retrieve id and value from input
+             }) // end input
+
+       $('#params_speed :input').each(function(){                                            //   NPs, CrosLin, Water, Titrant
+               if ($(this).hasClass('check')){
+                  if ( $(this).is(':checked') ){
+                     list_params.push($(this).attr('id'))                                    // giving checkboxes an ID attribute
                    }
                }
                else { list_params.push( $(this).attr('id') + ':' + $(this).val() )}          // retrieve id and value from input
