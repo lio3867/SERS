@@ -57,11 +57,11 @@ app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
 try:
-    from MD093_1_1_modif import EXPERIM
+    from .MD093_1_1_modif import EXPERIM
     print('Imports are OK')
     Exp1 = EXPERIM()
 except:
-    print('not using MD093_1_1_modif')
+    print('not using MD093_1_1_modif !!!!!!!!!!')
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -85,7 +85,7 @@ def send_estimated_time():
     '''
     '''
     Exp1.estimate_experiment_time()
-    emit('estim_time_hour', Exp1.t_exp_estimated_hour)
+    emit('estim_time_hours', Exp1.t_exp_estimated_hour)
 
 @socketio.on('params') #
 def retrieve_params(prms, debug=[]):
@@ -157,11 +157,14 @@ def message_at_beginning(host,port):
     pip install gevent (Windows)
     pip install eventlet
 
+    Change each time the port !!!
+    perhaps using random port..
+
     """ )
 
 if __name__ == '__main__':
     init(app.config)                         # clean last processings and upload folders
-    port = 5000; host = '0.0.0.0'
+    port = 5000; host = '127.0.0.1'
     print("host is " , host)
     launch_browser(port, host, platf)
     message_at_beginning(host,port)
