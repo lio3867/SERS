@@ -56,12 +56,16 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
-try:
-    from .MD093_1_1_modif import EXPERIM
-    print('Imports are OK')
-    Exp1 = EXPERIM()
-except:
-    print('not using MD093_1_1_modif !!!!!!!!!!')
+from .MD093_1_1_modif import EXPERIM
+print('Imports are OK')
+Exp1 = EXPERIM()
+
+#try:
+#    from .MD093_1_1_modif import EXPERIM
+#    print('Imports are OK')
+#    Exp1 = EXPERIM()
+#except:
+#    print('not using MD093_1_1_modif !!!!!!!!!!')
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -77,9 +81,16 @@ def load_params_in_Exp(Exp, params):
     params : experiment parameters from the interface
     '''
     try:
-        [ setattr(Exp,k,v) for k,v in params.items() ]
+        [ setattr(Exp,k,int(v)) for k,v in params.items() ]  
     except:
-        pass
+        try:
+            Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
+        except:
+            pass
+    print( f'P1 = {Exp.P1}' )
+    print( f'my_ESS_input = {Exp.my_ESS_input}' )
+    print( f't_integration_s = {Exp.t_integration_s}' )
+
 
 def send_estimated_time():
     '''

@@ -119,7 +119,7 @@ class INPUT():
         print(f'Experiment estimated time = {self.t_exp_estimated_hour} (hours)')
 
 class INIT_INSTRUMENTS():
-    def __init__():
+    def __init__(self):
         try:
             self.set_ESS()
             self.set_FRP()
