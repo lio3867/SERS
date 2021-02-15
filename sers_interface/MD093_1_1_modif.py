@@ -116,6 +116,8 @@ class INPUT():
         '''
         '''
         ## Estimate the experiment time
+        self.N_points()
+        print( f'n points = {self.n_points}' )
         self.n_SW = self.my_ESS_input.size
         self.t_exp_estimated = self.n_SW*self.t_step_min*10*self.cycles # in min
         self.t_exp_estimated_hour = round(self.t_exp_estimated/60, 2)

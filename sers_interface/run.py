@@ -90,7 +90,7 @@ def load_params_in_Exp(Exp, params):
             Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
     pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
     for i in range(5):
-        setattr(Exp, pinput[i], getattr(Exp,'P'+str(i+1)))
+        setattr(Exp, pinput[i], getattr(Exp,'P' + str(i+1)))
     # try:
     #     [ setattr(Exp,k,int(v)) for k,v in params.items() ]
     # except:
@@ -98,9 +98,10 @@ def load_params_in_Exp(Exp, params):
     #         Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
     #     except:
     #         pass
-    print( f'P1 = {Exp.P1}' )
-    print( f'my_ESS_input = {Exp.my_ESS_input}' )
-    print( f't_integration_s = {Exp.t_integration_s}' )
+    print( f'P1 = { Exp.P1 }' )
+    print( f't_step_min = { Exp.t_step_min }' )
+    print( f'my_ESS_input = { Exp.my_ESS_input }' )
+    print( f't_integration_s = { Exp.t_integration_s }' )
 
 
 def send_estimated_time():
