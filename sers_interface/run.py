@@ -15,6 +15,7 @@ python -m sers_interface.run
 from __future__ import print_function, division, absolute_import
 
 import errno, os, sys, csv, json, glob, logging
+from random import randint
 op = os.path
 opd, opb, opj = op.dirname, op.basename, op.join
 import shutil as sh
@@ -81,7 +82,7 @@ def load_params_in_Exp(Exp, params):
     params : experiment parameters from the interface
     '''
     try:
-        [ setattr(Exp,k,int(v)) for k,v in params.items() ]  
+        [ setattr(Exp,k,int(v)) for k,v in params.items() ]
     except:
         try:
             Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
@@ -175,7 +176,10 @@ def message_at_beginning(host,port):
 
 if __name__ == '__main__':
     init(app.config)                         # clean last processings and upload folders
-    port = 5000; host = '127.0.0.1'
+
+  # randint is inclusive at both ends
+
+    port = randint(5000, 5999); host = '127.0.0.1'
     print("host is " , host)
     launch_browser(port, host, platf)
     message_at_beginning(host,port)
