@@ -233,6 +233,7 @@ class INTERF():
             plt.plot(self.intensities)
             addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig( str(addr_img) )
+            emit('new_spec', '')
         except:
             # print('we are not using interface')
             pass
