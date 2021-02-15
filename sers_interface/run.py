@@ -88,6 +88,9 @@ def load_params_in_Exp(Exp, params):
             setattr(Exp,k,v)
         else:
             Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
+    pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
+    for i in range(5):
+        setattr(Exp, pinput[i], getattr(Exp,'P'+str(i+1))) 
     # try:
     #     [ setattr(Exp,k,int(v)) for k,v in params.items() ]
     # except:
