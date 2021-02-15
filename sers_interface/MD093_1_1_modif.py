@@ -234,6 +234,7 @@ class INTERF():
             addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig( str(addr_img) )
             emit('new_spec', '')
+            server.sleep(0.05)
         except:
             # print('we are not using interface')
             pass
@@ -356,16 +357,16 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         '''
         Finishing the experiment
         '''
-        print('closing (take about 1 min)')
+        print('closed')
         self.spec.close()
-        # [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
-
-        fgt_set_pressure(self.gate_Oil, 0)
-        for i in range(60):
-            time.sleep(1)
-            P_Oil = fgt_get_pressure(self.gate_Oil)
-            [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]
         [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
+
+        # fgt_set_pressure(self.gate_Oil, 0)
+        # for i in range(60):
+        #     time.sleep(1)
+        #     P_Oil = fgt_get_pressure(self.gate_Oil)
+        #     [ fgt_set_pressure(getattr(self, f'gate_{inj}'), P_Oil) for inj in ['NPs', 'CrosLIn', 'Water', 'Titrant'] ]
+        # [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
 
 
 ######------------------------------------------------------------------------#####

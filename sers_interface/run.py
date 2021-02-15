@@ -90,7 +90,7 @@ def load_params_in_Exp(Exp, params):
             Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
     pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
     for i in range(5):
-        setattr(Exp, pinput[i], getattr(Exp,'P'+str(i+1))) 
+        setattr(Exp, pinput[i], getattr(Exp,'P'+str(i+1)))
     # try:
     #     [ setattr(Exp,k,int(v)) for k,v in params.items() ]
     # except:
@@ -137,10 +137,10 @@ def proc(msg, debug=1):
     emit('state', {'mess': 'beginning '})
     server.sleep(0.05)
 
-    # Exp1.stablize_to_balance_state(5)
-    # Exp1.print_info()
-    # Exp1.launch_exp()
-    # Exp1.close()
+    Exp1.stablize_to_balance_state(5)
+    Exp1.print_info()
+    Exp1.launch_exp()
+    Exp1.close()
 
     server.sleep(0.05)
     emit('end_proc','finished')
