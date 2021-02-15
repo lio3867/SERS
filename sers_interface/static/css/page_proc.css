@@ -209,10 +209,12 @@
 
     .tit_reserv {
         font-size: 10px;
+        width:50px;
     }
 
     .input_gate {
         width:50px;
+        height:20px;
     }
 
     .value_gate {
@@ -244,6 +246,7 @@
     .input_speed {
         width:50px;
         margin-left:0px;
+        display: inline-block;
     }
 
     .NPs {

@@ -19,13 +19,16 @@ from matplotlib import pyplot as plt
 ##
 from flask_socketio import emit
 
-from Fluigent_ess.ESS import Switchboard
-from Fluigent_FRP.FRP import Flowboard
-from Fluigent.SDK import fgt_init, fgt_close
-from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRange
-
-import usb.core
-import seabreeze.spectrometers as sb
+try:
+    from Fluigent_ess.ESS import Switchboard
+    from Fluigent_FRP.FRP import Flowboard
+    from Fluigent.SDK import fgt_init, fgt_close
+    from Fluigent.SDK import fgt_set_pressure, fgt_get_pressure, fgt_get_pressureRange
+    ###
+    import usb.core
+    import seabreeze.spectrometers as sb
+except:
+    print('did not import some of modules')
 
 # Clear all
 try:
@@ -238,9 +241,12 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
     '''
     '''
     def __init__(self):
-        INPUT.__init__(self)
-        INIT_INSTRUMENTS.__init__(self)
-        DATA_HANDLING.__init__(self)
+        try:
+            INPUT.__init__(self)
+            INIT_INSTRUMENTS.__init__(self)
+            DATA_HANDLING.__init__(self)
+        except:
+            print('not loading for just interface')
         INTERF.__init__(self)
 
         # self.stablize_to_balance_state(t=10)
@@ -248,7 +254,6 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         # self.launch_exp()
 
         # self.close()
-
 
     def stablize_to_balance_state(self, t = 20):
         '''
@@ -342,8 +347,8 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
             else:
                 self.plus_minus *= -1
                 self.cycle +=  1
-                print( f'cycle no = {self.cycle}' )
-                print( f'plus_minus = {self.plus_minus} ' )
+                print( f'cycle no = { self.cycle }' )
+                print( f'plus_minus = { self.plus_minus } ' )
                 break
 
     def close(self):
