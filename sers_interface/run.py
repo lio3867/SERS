@@ -81,13 +81,20 @@ def load_params_in_Exp(Exp, params):
     Exp : experiment object
     params : experiment parameters from the interface
     '''
-    try:
-        [ setattr(Exp,k,int(v)) for k,v in params.items() ]
-    except:
-        try:
+    for k,v in params.items():
+        if v.isdigit():
+            setattr(Exp,k,int(v))
+        elif ',' not in v:
+            setattr(Exp,k,v)
+        else:
             Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
-        except:
-            pass
+    # try:
+    #     [ setattr(Exp,k,int(v)) for k,v in params.items() ]
+    # except:
+    #     try:
+    #         Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
+    #     except:
+    #         pass
     print( f'P1 = {Exp.P1}' )
     print( f'my_ESS_input = {Exp.my_ESS_input}' )
     print( f't_integration_s = {Exp.t_integration_s}' )
