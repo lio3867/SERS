@@ -61,12 +61,7 @@ from .MD093_1_1_modif import EXPERIM
 print('Imports are OK')
 Exp1 = EXPERIM()
 
-#try:
-#    from .MD093_1_1_modif import EXPERIM
-#    print('Imports are OK')
-#    Exp1 = EXPERIM()
-#except:
-#    print('not using MD093_1_1_modif !!!!!!!!!!')
+pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
@@ -76,6 +71,14 @@ def test_connect():
     emit('response', {'data': 'Connected'})
     server.sleep(0.05)
 
+def print_loaded_params():
+    '''
+    '''
+    print( f'P1 = { Exp.P1 }' )
+    print( f't_step_min = { Exp.t_step_min }' )
+    print( f'my_ESS_input = { Exp.my_ESS_input }' )
+    print( f't_integration_s = { Exp.t_integration_s }' )
+
 def load_params_in_Exp(Exp, params):
     '''
     Exp : experiment object
@@ -83,26 +86,14 @@ def load_params_in_Exp(Exp, params):
     '''
     for k,v in params.items():
         if v.isdigit():
-            setattr(Exp,k,int(v))
+            setattr(Exp,k,int(v))      # integer
         elif ',' not in v:
-            setattr(Exp,k,v)
+            setattr(Exp,k,v)           # string and not list
         else:
-            Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
-    pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
-    for i in range(5):
-        setattr(Exp, pinput[i], getattr(Exp,'P' + str(i+1)))
-    # try:
-    #     [ setattr(Exp,k,int(v)) for k,v in params.items() ]
-    # except:
-    #     try:
-    #         Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))
-    #     except:
-    #         pass
-    print( f'P1 = { Exp.P1 }' )
-    print( f't_step_min = { Exp.t_step_min }' )
-    print( f'my_ESS_input = { Exp.my_ESS_input }' )
-    print( f't_integration_s = { Exp.t_integration_s }' )
-
+            Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))  # list
+    for i in range(len(pinput)):
+        setattr(Exp, pinput[i], getattr(Exp,'P' + str(i+1))) # P_oil_in = P1 etc....
+    print_loaded_params()
 
 def send_estimated_time():
     '''
@@ -172,7 +163,7 @@ def message_at_beginning(host,port):
     ***************************************************************
     Launching the SERS program
 
-    address: {host}:{port}
+    address: { host }:{ port }
 
     Addons :
 

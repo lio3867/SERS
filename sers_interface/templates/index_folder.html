@@ -8,21 +8,11 @@
 
 {% include 'header_doc_exit.html' %}
 
-<!-- Processing steps :
-          file processed,
-          steps in processing
-          num image
- -->
-
-
 {% include 'params_experim.html' %}
 
 {% include 'spec_plot.html' %}
 
 {% include 'proc.html' %}
-
-{% include 'settings.html' %}
-
 
 <script>
 
@@ -33,18 +23,9 @@ $(document).ready(function(){
 
     {% include 'proc_trig.html' %}
 
-    /*
-
-    */
-
-     socket.on('new_spec', function(){
-         $('#spectrum_plot').attr('src', 'static/curr_pic/intensities.png' + '?t='  + new Date().getTime())
-       })
-
+    {% include 'spec_refresh.html' %}
 
 });
-
-manage_drop()                                          // manage the Dropzone
 
 $('#refresh').hide()
 
