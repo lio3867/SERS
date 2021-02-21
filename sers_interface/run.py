@@ -59,7 +59,6 @@ socketio = SocketIO(app)
 
 from .MD093_1_1_modif import EXPERIM
 print('Imports are OK')
-Exp1 = EXPERIM()
 
 pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
 
@@ -125,11 +124,13 @@ def proc(msg, debug=1):
     '''
     Process
     '''
+    global Exp1
 
     emit('state', {'mess': 'beginning '})
     server.sleep(0.05)
 
-    Exp1.stablize_to_balance_state(5)
+    Exp1 = EXPERIM()
+    Exp1.stablize_to_balance_state(t=5)
     Exp1.print_info()
     Exp1.launch_exp()
     Exp1.close()

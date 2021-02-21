@@ -227,6 +227,8 @@ class INTERF():
     '''
     def __init__(self):
         pass
+        # emit('new_spec', '')
+        # server.sleep(0.05)
 
     def plot_intensities(self):
         '''
@@ -252,12 +254,6 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         except:
             print('not loading for just interface')
         INTERF.__init__(self)
-
-        # self.stablize_to_balance_state(t=10)
-        # self.print_info()
-        # self.launch_exp()
-
-        # self.close()
 
     def stablize_to_balance_state(self, t = 20):
         '''
