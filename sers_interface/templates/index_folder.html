@@ -19,6 +19,8 @@
 $(document).ready(function(){
     var socket = io.connect('http://' + document.domain + ':' + location.port );  //+ '/test'
 
+    {% include 'calculate_times.html' %}
+
     //------- Launch the processing
 
     {% include 'proc_trig.html' %}

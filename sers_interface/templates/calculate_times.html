@@ -1,0 +1,30 @@
+/*
+
+Calculate the estimated times
+
+*/
+
+var calc_spec_over_step = function(){
+
+    var t_integ = $('#t_integration_s').val()
+    var t_step = $('#t_step_min').val()
+    var spec_over_step = Math.round(t_step*60/t_integ)
+
+    $('#spectra_over_step').text(spec_over_step)
+}
+
+var estimated_time = function(){
+
+    var sb_pos = $('#sb_pos').val()
+    var nbpos = sb_pos.split(',').length
+    var t_step = $('#t_step_min').val()
+    var cycles = $('#cycles').val()
+    var estim_time = nbpos*t_step*10*cycles/60
+
+    $('#estimated_time').text(estim_time)
+}
+
+$('.input_timings').change(function(){
+    calc_spec_over_step()
+    estimated_time()
+})

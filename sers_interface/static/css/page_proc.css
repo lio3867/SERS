@@ -165,13 +165,28 @@
       /* integration time, step time etc.. */
 
       position: absolute;
-      top: 300px;
+      top: 250px;
       left: 160px;
       height: 150px;
       width: 300px;
       border-style: dotted;
       padding-left: 20px;
       padding-top: 20px;
+    }
+
+ #resulting_times {
+
+      /* */
+
+      position: absolute;
+      top: 420px;
+      left: 160px;
+      height: 70px;
+      width: 300px;
+      border-style: dotted;
+      border-color: blue;
+      padding-left: 20px;
+      padding-top: 10px;
     }
 
     .input_timings {
