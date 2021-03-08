@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import time
+from time import sleep
 import datetime
 from statistics import mean
 from matplotlib import pyplot as plt
@@ -238,10 +239,27 @@ class INTERF():
             addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig( str(addr_img) )
             emit('new_spec', '')
+            sleep(1)
             server.sleep(0.05)
         except:
             # print('we are not using interface')
             pass
+
+# class TEST():
+#     '''
+#     Test socket
+#     '''
+#     def __init__(self):
+#         pass
+#
+#
+#     def test_socket(self):
+#         '''
+#         '''
+#
+#         emit('new_spec', '')
+#         server.sleep(0.05)
+
 
 class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
     '''
