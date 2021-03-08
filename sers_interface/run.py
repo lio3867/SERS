@@ -62,6 +62,8 @@ print('Imports are OK')
 
 pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
 
+
+
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
     '''
@@ -70,7 +72,7 @@ def test_connect():
     emit('response', {'data': 'Connected'})
     server.sleep(0.05)
 
-def print_loaded_params():
+def print_loaded_params(Exp):
     '''
     '''
     print( f'P1 = { Exp.P1 }' )
@@ -92,7 +94,7 @@ def load_params_in_Exp(Exp, params):
             Exp.my_ESS_input = np.array(list(map(int,params['sb_pos'].split(','))))  # list
     for i in range(len(pinput)):
         setattr(Exp, pinput[i], getattr(Exp,'P' + str(i+1))) # P_oil_in = P1 etc....
-    print_loaded_params()
+    print_loaded_params(Exp)
 
 def send_estimated_time():
     '''
@@ -105,7 +107,8 @@ def retrieve_params(prms, debug=[]):
     '''
     Retrieve the parameters from the interface
     '''
-    global params
+    global params, Exp1
+    Exp1 = EXPERIM()
     if 1 in debug: print(f'json file is { json.loads(prms) }')
     params = { p.split(':')[0]:p.split(':')[1] for p in json.loads(prms) }
     print( f"### params are { params } ")
@@ -129,7 +132,7 @@ def proc(msg, debug=1):
     emit('state', {'mess': 'beginning '})
     server.sleep(0.05)
 
-    Exp1 = EXPERIM()
+
     Exp1.stablize_to_balance_state(t=5)
     Exp1.print_info()
     Exp1.launch_exp()
