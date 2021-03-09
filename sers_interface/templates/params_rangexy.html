@@ -1,0 +1,7 @@
+
+$('#save_range_xy').click(function(){
+
+  var rangexy = $('#rangex').val() + '_' + $('#rangey').val()
+  socket.emit('rangexy', rangexy)
+
+})

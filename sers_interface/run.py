@@ -115,6 +115,19 @@ def retrieve_params(prms, debug=[]):
     load_params_in_Exp(Exp1, params)
     send_estimated_time()
 
+@socketio.on('rangexy') #
+def rangexy(rangexy, debug=[]):
+    '''
+    '''
+    global Exp1
+    rangex = rangexy.split('_')[0]
+    rangey = rangexy.split('_')[1]
+    print(f'rangexy { rangexy }')
+    x = rangex.split(',')
+    y = rangey.split(',')
+    Exp1.rangex = [x[0],x[1]]
+    Exp1.rangey = [y[0],y[1]]
+
 @app.route('/', methods=['GET', 'POST'])
 def main_page(debug=1):
     '''

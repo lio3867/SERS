@@ -235,6 +235,8 @@ class INTERF():
         '''
         '''
         try:
+            plt.xlim(self.rangex[0],self.rangex[1])
+            plt.ylim(self.rangey[0],self.rangey[1])
             plt.plot(self.intensities)
             addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig( str(addr_img) )
