@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+{% include 'index_head.html' %}
+
+<body>
+
+
+
+<script>
+
+$(document).ready(function(){
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port );
+
+    setInterval(function(){
+          socket.emit('mess', 'Hello the gugus !!!')
+          alert('blurp')
+    }, 1000)
+
+    socket.on('refresh', function(mess){
+          alert("refresh pic !!!")
+    })
+
+
+
+});
+
+
+</script>
+
+
+
+</body>
+</html>

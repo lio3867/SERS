@@ -62,8 +62,6 @@ print('Imports are OK')
 
 pinput = [ 'P_Oil_in','P_NPs_in','P_CrosLIn_in','P_Water_in','P_Titrant_in' ]
 
-
-
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
     '''
@@ -144,7 +142,6 @@ def proc(msg, debug=1):
 
     emit('state', {'mess': 'beginning '})
     server.sleep(0.05)
-
 
     Exp1.stablize_to_balance_state(t=5)
     Exp1.print_info()
