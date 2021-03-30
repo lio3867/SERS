@@ -78,7 +78,14 @@ def receiving_mess(mess):
     Receiving a message
     '''
     print( f"mess is { mess }" )
-    emit('refresh', "bingo")
+    emit('refresh', "")
+
+@socketio.on('trig') #  ,
+def trig(mess):
+    '''
+    trig
+    '''
+    emit('new_spec', "")
 
 def shutdown_server():
     '''

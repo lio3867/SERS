@@ -67,7 +67,7 @@ def test_connect():
     '''
     Websocket connection
     '''
-    emit('response', {'data': 'Connected'})
+    emit('response', 'Connected')
     server.sleep(0.05)
 
 def print_loaded_params(Exp):
@@ -111,7 +111,6 @@ def retrieve_params(prms, debug=[]):
     params = { p.split(':')[0]:p.split(':')[1] for p in json.loads(prms) }
     print( f"### params are { params } ")
     load_params_in_Exp(Exp1, params)
-    send_estimated_time()
 
 @socketio.on('rangexy') #
 def rangexy(rangexy, debug=[]):
@@ -140,7 +139,6 @@ def proc(msg, debug=1):
     '''
     global Exp1
 
-    #emit('state', {'mess': 'beginning '})
     sleep(1)
     emit('check_emit', "received the message")
     server.sleep(0.05)

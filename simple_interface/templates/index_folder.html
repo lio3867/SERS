@@ -5,6 +5,7 @@
 
 <body>
 
+  <button class="btn btn-success" id="processing" > <i class="fa fa-chevron-right" aria-hidden="true"></i> launch </button>
 
 
 <script>
@@ -17,13 +18,19 @@ $(document).ready(function(){
           alert(mess)
     })
 
-    setInterval(function(){
-          socket.emit('mess', 'Hello the gugus !!!')
-          //alert('blurp')
-    }, 1000)
+    // setInterval(function(){
+    //       socket.emit('mess', 'Hello the gugus !!!')
+    //       //alert('blurp')
+    // }, 1000)
 
     socket.on('refresh', function(mess){
           alert("refresh pic !!!")
+    })
+
+    {% include 'spec_refresh.html' %}
+
+    $('#processing').click(function(){
+        socket.emit('trig','')
     })
 
 
