@@ -62,7 +62,7 @@ def test_connect():
     '''
     Websocket connection
     '''
-    emit('response', {'data': 'Connected'})
+    emit('response', 'Connected')
     server.sleep(0.05)
 
 @app.route('/', methods=['GET', 'POST'])
@@ -73,7 +73,7 @@ def main_page(debug=1):
     return render_template('index_folder.html', **dmp.__dict__)
 
 @socketio.on('mess') #  ,
-def receiving_mess():
+def receiving_mess(mess):
     '''
     Receiving a message
     '''
