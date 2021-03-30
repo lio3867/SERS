@@ -19,7 +19,7 @@ var estimated_time = function(){
     var nbpos = sb_pos.split(',').length
     var t_step = $('#t_step_min').val()
     var cycles = $('#cycles').val()
-    var estim_time = nbpos*t_step*10*cycles/60
+    var estim_time = nbpos*t_step*10*cycles/60      // Estimated time
 
     $('#estimated_time').text(estim_time)
 }

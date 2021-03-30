@@ -122,7 +122,6 @@ def message_at_beginning(host,port):
 if __name__ == '__main__':
     init(app.config)                         # clean last processings and upload folders
 
-  # randint is inclusive at both ends
 
     port = randint(5000, 5999); host = '127.0.0.1'
     print("host is " , host)

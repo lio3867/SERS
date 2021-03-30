@@ -1,6 +1,6 @@
 /*
 
-Retrieving the parameters used in the SERS experiment
+Retreiving the parameters used in the SERS experiment
 
 */
 
@@ -53,6 +53,6 @@ $('#processing').click(function(){                                              
 
     socket.emit('params', all_params)                      // emit the params
     setTimeout(function(){}, 500)
-    socket.emit('launch_proc', '')           // emit the files names
+    socket.emit('launch_proc', '')                        // launch the processing
 
 })

@@ -231,12 +231,12 @@ class INTERF():
         # emit('new_spec', '')
         # server.sleep(0.05)
 
-    def plot_intensities(self):
+    def plot_intensities(self, debug=[]):
         '''
         '''
         try:
-            plt.xlim(self.rangex[0],self.rangex[1])
-            plt.ylim(self.rangey[0],self.rangey[1])
+            # plt.xlim(self.rangex[0],self.rangex[1])
+            # plt.ylim(self.rangey[0],self.rangey[1])
             plt.plot(self.intensities)
             addr_img = Path('sers_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig( str(addr_img) )
@@ -377,7 +377,7 @@ class EXPERIM(INPUT,INIT_INSTRUMENTS,DATA_HANDLING,INTERF):
         '''
         print('closed')
         self.spec.close()
-        [ fgt_set_pressure(getattr(self, f'gate_{inj}'), 0) for inj in self.injected ]
+        [ fgt_set_pressure(getattr(self, f'gate_{ inj }'), 0) for inj in self.injected ]
 
         # fgt_set_pressure(self.gate_Oil, 0)
         # for i in range(60):

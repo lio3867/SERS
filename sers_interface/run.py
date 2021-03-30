@@ -98,7 +98,7 @@ def send_estimated_time():
     '''
     '''
     Exp1.estimate_experiment_time()
-    emit('estim_time_hours', Exp1.t_exp_estimated_hour)
+    emit('estim_time_hours', round( Exp1.t_exp_estimated_hour,2 ) )
 
 @socketio.on('params') #
 def retrieve_params(prms, debug=[]):
@@ -140,7 +140,9 @@ def proc(msg, debug=1):
     '''
     global Exp1
 
-    emit('state', {'mess': 'beginning '})
+    #emit('state', {'mess': 'beginning '})
+    sleep(1)
+    emit('check_emit', "received the message")
     server.sleep(0.05)
 
     Exp1.stablize_to_balance_state(t=5)
@@ -193,7 +195,6 @@ def message_at_beginning(host,port):
 if __name__ == '__main__':
     init(app.config)                         # clean last processings and upload folders
 
-  # randint is inclusive at both ends
 
     port = randint(5000, 5999); host = '127.0.0.1'
     print("host is " , host)
