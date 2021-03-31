@@ -66,6 +66,7 @@ class EXPERIM():
             time.sleep(0.1) #sec
             emit('new_spec', "")
             print(f'making curve {i}')
+            emit('curr_val', str(i))
 
 
 ######------------------------------------------------------------------------#####
