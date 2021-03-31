@@ -133,7 +133,7 @@ def main_page(debug=1):
     return render_template('index_folder.html', **dmp.__dict__)
 
 @socketio.on('launch_proc') #
-def proc(msg, debug=1):
+def proc(msg, debug=[]):
     '''
     Process
     '''
