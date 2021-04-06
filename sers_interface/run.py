@@ -6,8 +6,8 @@
 SERS program
 
 pip install flask-socketio
-pip install eventlet
-pip install eventlet==0.26 (for Windows)
+Removing eventlet permitted to make the program work correctly ( image refreshing regularly... )
+But it still gets stuck at some point.. 
 
 python -m sers_interface.run
 
@@ -21,6 +21,7 @@ opd, opb, opj = op.dirname, op.basename, op.join
 import shutil as sh
 from colorama import Fore, Back, Style      # Color in the Terminal
 import time
+from time import sleep
 from datetime import datetime
 import subprocess
 import multiprocessing
