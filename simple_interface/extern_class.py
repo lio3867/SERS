@@ -47,23 +47,25 @@ server = chose_server(platf)
 class EXPERIM():
     '''
     '''
-    def __init__(self):
+    def __init__(self, N=100):
         '''
         '''
+        self.N = N
 
     def make_plots(self):
         '''
 
         '''
 
-        N = 100
-        for i in range(100):
-            x = 10*np.arange(N)/N+i*0.33
+        for i in range(self.N):
+            x = 10*np.arange(self.N)/self.N+i*0.33
             y = np.cos(x)
+            plt.figure()
             plt.plot(x,y, 'g--')
             addr_img = Path('simple_interface') / 'static' / 'curr_pic' / 'intensities.png'
             plt.savefig(addr_img)
-            time.sleep(0.1) #sec
+            plt.close()
+            time.sleep(0.1)         #sec
             emit('new_spec', "")
             print(f'making curve {i}')
             emit('curr_val', str(i))

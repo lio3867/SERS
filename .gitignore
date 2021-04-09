@@ -1,0 +1,15 @@
+symbol: global
+
+DS_Store
+*.pyc
+
+
+# jupyter
+*.ipynb_checkpoints/
+
+# images
+*.tif
+*.tiff
+*.jpg
+*.avi
+*.png

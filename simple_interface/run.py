@@ -58,7 +58,7 @@ app.config['SECRET_KEY'] = 'F34TF$($e34D';
 socketio = SocketIO(app)
 
 from .extern_class import EXPERIM
-Exp1 = EXPERIM()
+Exp1 = EXPERIM(1000)
 
 @socketio.on('connect') #  , namespace='/test'
 def test_connect():
